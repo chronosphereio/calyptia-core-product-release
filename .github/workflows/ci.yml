@@ -154,9 +154,9 @@ jobs:
           # docker pull $CALYPTIA_CLOUD_IMAGE:$CALYPTIA_CLOUD_IMAGE_TAG
           docker pull $CALYPTIA_CLOUD_IMAGE:main
           docker tag $CALYPTIA_CLOUD_IMAGE:main $CALYPTIA_CLOUD_IMAGE:$CALYPTIA_CLOUD_IMAGE_TAG
-          kind load docker-image $CALYPTIA_CLOUD_IMAGE:$CALYPTIA_CLOUD_IMAGE_TAG          
+          kind load docker-image $CALYPTIA_CLOUD_IMAGE:$CALYPTIA_CLOUD_IMAGE_TAG
           
-          docker pull $CALYPTIA_CORE_IMAGE@$CALYPTIA_CORE_IMAGE_TAG
+          docker pull $CALYPTIA_CORE_IMAGE:$CALYPTIA_CORE_IMAGE_TAG
           kind load docker-image $CALYPTIA_CORE_IMAGE:$CALYPTIA_CORE_IMAGE_TAG
           
           docker pull $CALYPTIA_CORE_SIDECAR_IMAGE:$CALYPTIA_CORE_SIDECAR_IMAGE_TAG
