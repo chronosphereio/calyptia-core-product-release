@@ -90,7 +90,7 @@ jobs:
             jq '.versions.cloud = "${{ inputs.cloud-version || needs.get-cloud-release.outputs.semver-tag }}"' |\
             jq '.versions.cloud_e2e = "${{ inputs.cloud-e2e-version || needs.get-cloud-e2e-release.outputs.semver-tag }}"' |\
             jq '.versions.core_fluent_bit = "${{ inputs.core-fluent-bit-version || needs.get-core-fluent-bit-release.outputs.semver-tag }}"' |\
-            jq '.versions.core = "${{ inputs.core-version || needs.get-core--release.outputs.semver-tag }}"' |\
+            jq '.versions.core = "${{ inputs.core-version || needs.get-core-release.outputs.semver-tag }}"' |\
             | tee ./component-config.json
         shell: bash
 
@@ -110,7 +110,7 @@ jobs:
             - CLI: ${{ inputs.cli-version || needs.get-cli-release.outputs.tag }}
             - Cloud: ${{ inputs.cloud-version || needs.get-cloud-release.outputs.tag }}
             - Cloud E2E: ${{ inputs.cloud-e2e-version || needs.get-cloud-release.outputs.tag }}
-            - Core Fluent Bit: ${{ inputs.core-fluent-bit-version || needs.get-core-fle-release.outputs.tag }}
+            - Core Fluent Bit: ${{ inputs.core-fluent-bit-version || needs.get-core-fluent-bit-release.outputs.tag }}
             - Core: ${{ inputs.core-version || needs.get-core-release.outputs.tag }}
 
             Github info:
