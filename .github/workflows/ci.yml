@@ -212,4 +212,6 @@ jobs:
             - Core: ${{ needs.ci-get-metadata.outputs.core-version }}
             - Core Fluent Bit: ${{ needs.ci-get-metadata.outputs.core-fluent-bit-version }}
           fail_on_unmatched_files: false
+          files: |
+            *.json
           generate_release_notes: false

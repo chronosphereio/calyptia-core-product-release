@@ -86,11 +86,11 @@ jobs:
         # Note we also cope with empty versions provided on input - this will then use latest.
         run: |
           jq -r . ./component-config.json | \
-            jq '.versions.cli = "${{ inputs.cli-version || needs.ci-get-cli-release.outputs.semver-tag }}"' |\
-            jq '.versions.cloud = "${{ inputs.cloud-version || needs.ci-get-cloud-release.outputs.semver-tag }}"' |\
-            jq '.versions.cloud_e2e = "${{ inputs.cloud-e2e-version || needs.ci-get-cloud_e2e-release.outputs.semver-tag }}"' |\
-            jq '.versions.core_fluent_bit = "${{ inputs.core-fluent-bit-version || needs.ci-get-core-fluent-bit-release.outputs.semver-tag }}"' |\
-            jq '.versions.core = "${{ inputs.core-version || needs.ci-get-core--release.outputs.semver-tag }}"' |\
+            jq '.versions.cli = "${{ inputs.cli-version || needs.get-cli-release.outputs.semver-tag }}"' |\
+            jq '.versions.cloud = "${{ inputs.cloud-version || needs.get-cloud-release.outputs.semver-tag }}"' |\
+            jq '.versions.cloud_e2e = "${{ inputs.cloud-e2e-version || needs.get-cloud_e2e-release.outputs.semver-tag }}"' |\
+            jq '.versions.core_fluent_bit = "${{ inputs.core-fluent-bit-version || needs.get-core-fluent-bit-release.outputs.semver-tag }}"' |\
+            jq '.versions.core = "${{ inputs.core-version || needs.get-core--release.outputs.semver-tag }}"' |\
             | tee ./component-config.json
         shell: bash
 
@@ -107,11 +107,11 @@ jobs:
           labels: ci,automerge
           body: |
             Update Calyptia versions
-            - CLI: ${{ inputs.cli-version || needs.ci-get-cli-release.outputs.cli-version }}
-            - Cloud: ${{ inputs.cloud-version || needs.ci-get-cloud-release.outputs.cloud-version }}
-            - Cloud E2E: ${{ inputs.cloud-e2e-version || needs.ci-get-cloud-release.outputs.cloud-e2e-version }}
-            - Core Fluent Bit: ${{ inputs.core-fluent-bit-version || needs.ci-get-core-fle-release.outputs.core-fluent-bit-version }}
-            - Core: ${{ inputs.core-version || needs.ci-get-core-release.outputs.core-version }}
+            - CLI: ${{ inputs.cli-version || needs.get-cli-release.outputs.cli-version }}
+            - Cloud: ${{ inputs.cloud-version || needs.get-cloud-release.outputs.cloud-version }}
+            - Cloud E2E: ${{ inputs.cloud-e2e-version || needs.get-cloud-release.outputs.cloud-e2e-version }}
+            - Core Fluent Bit: ${{ inputs.core-fluent-bit-version || needs.get-core-fle-release.outputs.core-fluent-bit-version }}
+            - Core: ${{ inputs.core-version || needs.get-core-release.outputs.core-version }}
 
             Github info:
             - Created by ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
