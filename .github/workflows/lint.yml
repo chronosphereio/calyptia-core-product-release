@@ -1,0 +1,49 @@
+name: Lint PRs
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+
+  shellcheck-pr:
+    runs-on: ubuntu-latest
+    name: PR - Shellcheck
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ludeeus/action-shellcheck@master
+
+  actionlint-pr:
+    runs-on: ubuntu-latest
+    name: PR - Actionlint
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          echo "::add-matcher::.github/actionlint-matcher.json"
+          bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+          ./actionlint -color -shellcheck=
+        shell: bash
+
+  docslint-pr:
+    runs-on: ubuntu-latest
+    name: PR - Markdownlint
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run markdownlint
+        uses: actionshub/markdownlint@v2.1.2
+
+  superlinter-pr:
+    runs-on: ubuntu-latest
+    name: PR - SuperLinter
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - uses: github/super-linter/slim@v4
+        env:
+          # Only include new/updated files
+          VALIDATE_ALL_CODEBASE: false
+          DEFAULT_BRANCH: main
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Turn off actionlint with shellcheck failures
+          VALIDATE_GITHUB_ACTIONS: false
