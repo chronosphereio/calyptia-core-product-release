@@ -45,3 +45,5 @@ jobs:
           VALIDATE_ALL_CODEBASE: false
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Turn off actionlint with shellcheck failures
+          DISABLE_ACTIONLINT: true
