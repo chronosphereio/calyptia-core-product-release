@@ -185,7 +185,7 @@ jobs:
         env:
           CALYPTIA_CLOUD_IMAGE: ghcr.io/calyptia/cloud/all-in-one
           CALYPTIA_CLOUD_IMAGE_TAG: ${{ needs.ci-get-metadata.outputs.cloud-version }}
-          CALYPTIA_CORE_IMAGE: ghcr.io/calyptia/internal/core
+          CALYPTIA_CORE_IMAGE: ghcr.io/calyptia/core
           CALYPTIA_CORE_IMAGE_TAG: ${{ needs.ci-get-metadata.outputs.core-version }}
           CALYPTIA_CLI_IMAGE: ghcr.io/calyptia/cli
           CALYPTIA_CLI_IMAGE_TAG: ${{ needs.ci-get-metadata.outputs.cli-version }}
