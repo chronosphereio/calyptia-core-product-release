@@ -35,35 +35,35 @@ jobs:
         run: |
           version=$( jq -cr .versions.cli ./component-config.json )
           echo "Found version: $version"
-          echo "version=$version" >> $GITHUB_ENV
+          echo "version=$version" >> "$GITHUB_OUTPUT"
         shell: bash
 
       - id: get-cloud-version
         run: |
           version=$( jq -cr .versions.cloud ./component-config.json )
           echo "Found version: $version"
-          echo "version=$version" >> $GITHUB_ENV
+          echo "version=$version" >> "$GITHUB_OUTPUT"
         shell: bash
 
       - id: get-cloud-e2e-version
         run: |
           version=$( jq -cr .versions.cloud_e2e ./component-config.json )
           echo "Found version: $version"
-          echo "version=$version" >> $GITHUB_ENV
+          echo "version=$version" >> "$GITHUB_OUTPUT"
         shell: bash
 
       - id: get-core-version
         run: |
           version=$( jq -cr .versions.core ./component-config.json )
           echo "Found version: $version"
-          echo "version=$version" >> $GITHUB_ENV
+          echo "version=$version" >> "$GITHUB_OUTPUT"
         shell: bash
 
       - id: get-core-fluent-bit-version
         run: |
           version=$( jq -cr .versions.core_fluent_bit ./component-config.json )
           echo "Found version: $version"
-          echo "version=$version" >> $GITHUB_ENV
+          echo "version=$version" >> "$GITHUB_OUTPUT"
         shell: bash
 
   ci-internal:
@@ -106,7 +106,7 @@ jobs:
             ref=v${BASH_REMATCH[1]}
           fi
           echo "Determined to use ref: $ref"
-          echo "ref=$e2e_ref" >> "$GITHUB_OUTPUT"
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
         shell: bash
         env:
           INPUT_VERSION: ${{ needs.ci-get-metadata.outputs.cloud-e2e-version }}
