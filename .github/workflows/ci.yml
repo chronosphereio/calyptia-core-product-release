@@ -150,7 +150,10 @@ jobs:
 
       - name: Load required images in the kind cluster
         run: |
-          docker pull $CALYPTIA_CLOUD_IMAGE:$CALYPTIA_CLOUD_IMAGE_TAG
+          # TODO: requires https://github.com/calyptia/cloud/issues/793
+          # docker pull $CALYPTIA_CLOUD_IMAGE:$CALYPTIA_CLOUD_IMAGE_TAG
+          docker pull $CALYPTIA_CLOUD_IMAGE:main
+          docker tag $CALYPTIA_CLOUD_IMAGE:main $CALYPTIA_CLOUD_IMAGE:$CALYPTIA_CLOUD_IMAGE_TAG
           kind load docker-image $CALYPTIA_CLOUD_IMAGE:$CALYPTIA_CLOUD_IMAGE_TAG          
           
           docker pull $CALYPTIA_CORE_IMAGE@$CALYPTIA_CORE_IMAGE_TAG
@@ -160,9 +163,11 @@ jobs:
           kind load docker-image $CALYPTIA_CORE_SIDECAR_IMAGE:$CALYPTIA_CORE_SIDECAR_IMAGE_TAG
         env:
           CALYPTIA_CLOUD_IMAGE: ghcr.io/calyptia/cloud/all-in-one
+          # TODO: requires https://github.com/calyptia/cloud/issues/793
           CALYPTIA_CLOUD_IMAGE_TAG: ${{ needs.ci-get-metadata.outputs.cloud-version }}
-          CALYPTIA_CORE_IMAGE: ghcr.io/calyptia/internal/core
-          CALYPTIA_CORE_IMAGE_TAG: ${{ needs.ci-get-metadata.outputs.core-version }}
+          CALYPTIA_CORE_IMAGE: ghcr.io/calyptia/core
+          CALYPTIA_CORE_IMAGE_TAG: v${{ needs.ci-get-metadata.outputs.core-version }}
+          # TODO: deprecated
           CALYPTIA_CORE_SIDECAR_IMAGE: ghcr.io/calyptia/core-sidecar
           CALYPTIA_CORE_SIDECAR_IMAGE_TAG: main
 
