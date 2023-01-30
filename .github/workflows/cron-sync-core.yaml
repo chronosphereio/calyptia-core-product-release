@@ -4,23 +4,23 @@ on:
   workflow_dispatch:
     inputs:
       cli-version: 
-        description: The new CLI version to use.
+        description: The new CLI version to use, no v prefix.
         required: true
         type: string
       cloud-version: 
-        description: The new Cloud version to use.
+        description: The new Cloud version to use, no v prefix.
         required: true
         type: string
       cloud-e2e-version: 
-        description: The new cloud-e2e version to use.
+        description: The new cloud-e2e version to use, no v prefix.
         required: true
         type: string
       core-fluent-bit-version: 
-        description: The new Core Fluent Bit version to use.
+        description: The new Core Fluent Bit version to use, no v prefix.
         required: true
         type: string
       core-version: 
-        description: The new Core version to use.
+        description: The new Core version to use, no v prefix.
         required: true
         type: string
   schedule:

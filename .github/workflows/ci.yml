@@ -101,7 +101,7 @@ jobs:
         with:
           repository: calyptia/cloud-e2e
           token: ${{ secrets.CI_PAT }}
-          ref: ${{ needs.ci-get-metadata.outputs.cloud-e2e-version }}
+          ref: v${{ needs.ci-get-metadata.outputs.cloud-e2e-version }}
           path: cloud-e2e
 
       - name: Log in to the Container registry
