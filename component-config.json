@@ -1,0 +1,9 @@
+{
+    "versions": {
+        "cli": "1",
+        "cloud": "2",
+        "cloud_e2e": "3",
+        "core_fluent_bit": "4",
+        "core": "5"
+    }
+}

@@ -1,0 +1,50 @@
+name: Get latest tag
+on:
+  workflow_call:
+    inputs:
+      repo: 
+        description: The repository we want the latest tag for.
+        required: true
+        type: string
+      org: 
+        description: The organisation containing the repo we want the latest tag for.
+        required: false
+        type: string
+        default: calyptia
+    secrets:
+      token: 
+        description: The Github token to use for authentication with the repository.
+        required: true
+    outputs:
+      tag: 
+        description: The tag used to create the release.
+        value: ${{ jobs.get-release.outputs.tag }}
+      semver-tag: 
+        description: The tag used to create the release without a 'v' prefix
+        value: ${{ jobs.get-release.outputs.semver-tag }}
+jobs:
+  get-release:
+    name: Get release for ${{ inputs.repo }}
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.get-release.outputs.tag }}
+      semver-tag: ${{ steps.get-release.outputs.semver-tag }}
+    steps:
+      - id: get-release
+        run: |
+          curl -sSfl -H "Authorization: Bearer $GITHUB_TOKEN"  https://api.github.com/repos/${{ inputs.org }}/${{ inputs.repo }}/releases/latest
+          LATEST_RELEASE_TAG=$(curl -sSfl -H "Authorization: Bearer $GITHUB_TOKEN"  https://api.github.com/repos/${{ inputs.org }}/${{ inputs.repo }}/releases/latest|jq -r .tag_name)
+          echo "Found tag for latest ${{ inputs.repo }} release: $LATEST_RELEASE_TAG"
+          echo "tag=$LATEST_RELEASE_TAG" >> $GITHUB_OUTPUT
+          # Strip the v's
+          if [[ "$LATEST_RELEASE_TAG" =~ ^v?([0-9]+\.[0-9]+\.[0-9])+$ ]] ; then
+            LATEST_RELEASE_TAG_WITHOUT_V=${BASH_REMATCH[1]}
+            echo "Updated to: $LATEST_RELEASE_TAG_WITHOUT_V"
+            echo "semver-tag=$LATEST_RELEASE_TAG_WITHOUT_V" >> $GITHUB_OUTPUT
+          else
+            echo "No v prefix found: $LATEST_RELEASE_TAG"
+            echo "semver-tag=$LATEST_RELEASE_TAG" >> $GITHUB_OUTPUT
+          fi
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.token }}
