@@ -91,7 +91,7 @@ jobs:
             jq '.versions.cloud_e2e = "${{ inputs.cloud-e2e-version || needs.get-cloud-e2e-release.outputs.semver-tag }}"' |\
             jq '.versions.core_fluent_bit = "${{ inputs.core-fluent-bit-version || needs.get-core-fluent-bit-release.outputs.semver-tag }}"' |\
             jq '.versions.core = "${{ inputs.core-version || needs.get-core-release.outputs.semver-tag }}"' |\
-            | tee ./component-config.json
+            tee ./component-config.json
         shell: bash
 
       - name: Generate PR - runs all the tests
