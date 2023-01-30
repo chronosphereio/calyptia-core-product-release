@@ -96,12 +96,27 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Determine e2e ref to check out
+        # Copes with a tagged release, main or a commit/branch
+        id: e2e-ref
+        run: |
+          ref="$INPUT_VERSION"
+          if [[ "$ref" =~ ^v?([0-9]+\.[0-9]+\.[0-9])+$ ]] ; then
+            echo "Detected tag version: $ref"
+            ref=v${BASH_REMATCH[1]}
+          fi
+          echo "Determined to use ref: $ref"
+          echo "ref=$e2e_ref" >> "$GITHUB_OUTPUT"
+        shell: bash
+        env:
+          INPUT_VERSION: ${{ needs.ci-get-metadata.outputs.cloud-e2e-version }}
+
       - name: Checkout cloud-e2e
         uses: actions/checkout@v3
         with:
           repository: calyptia/cloud-e2e
           token: ${{ secrets.CI_PAT }}
-          ref: v${{ needs.ci-get-metadata.outputs.cloud-e2e-version }}
+          ref: ${{ steps.e2e-ref.outputs.ref }}
           path: cloud-e2e
 
       - name: Log in to the Container registry
