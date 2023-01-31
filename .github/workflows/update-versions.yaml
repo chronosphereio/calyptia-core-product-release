@@ -85,13 +85,13 @@ jobs:
         # We want to ensure we do not overwrite anything else in the file, just versions.
         # Note we also cope with empty versions provided on input - this will then use latest.
         run: |
-          jq -r . ./component-config.json | \
-            jq '.versions.cli = "${{ inputs.cli-version || needs.get-cli-release.outputs.semver-tag }}"' |\
-            jq '.versions.cloud = "${{ inputs.cloud-version || needs.get-cloud-release.outputs.semver-tag }}"' |\
-            jq '.versions.cloud_e2e = "${{ inputs.cloud-e2e-version || needs.get-cloud-e2e-release.outputs.semver-tag }}"' |\
-            jq '.versions.core_fluent_bit = "${{ inputs.core-fluent-bit-version || needs.get-core-fluent-bit-release.outputs.semver-tag }}"' |\
-            jq '.versions.core = "${{ inputs.core-version || needs.get-core-release.outputs.semver-tag }}"' |\
-            tee ./component-config.json
+          jq '
+          .versions.cli = "${{ inputs.cli-version || needs.get-cli-release.outputs.semver-tag }}" | 
+          .versions.cloud = "${{ inputs.cloud-version || needs.get-cloud-release.outputs.semver-tag }}" | 
+          .versions.cloud_e2e = "${{ inputs.cloud-e2e-version || needs.get-cloud-e2e-release.outputs.semver-tag }}" | 
+          .versions.core_fluent_bit = "${{ inputs.core-fluent-bit-version || needs.get-core-fluent-bit-release.outputs.semver-tag }}" | 
+          .versions.core = "${{ inputs.core-version || needs.get-core-release.outputs.semver-tag }}"' ./component-config.json | tee ./component-config-new.json
+          mv -f ./component-config-new.json ./component-config.json
         shell: bash
 
       - name: Generate PR - runs all the tests
