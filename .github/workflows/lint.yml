@@ -29,7 +29,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Run markdownlint
-        uses: actionshub/markdownlint@v2.1.4
+        uses: actionshub/markdownlint@v3.0.2
 
   superlinter-pr:
     runs-on: ubuntu-latest
