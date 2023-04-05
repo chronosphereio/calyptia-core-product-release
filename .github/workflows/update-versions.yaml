@@ -95,7 +95,7 @@ jobs:
         shell: bash
 
       - name: Generate PR - runs all the tests
-        uses: peter-evans/create-pull-request@v4
+        uses: peter-evans/create-pull-request@v5
         with:
           commit-message: 'ci: update to latest versions'
           signoff: true
