@@ -39,7 +39,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: github/super-linter/slim@v4
+      - uses: github/super-linter/slim@v5
         env:
           # Only include new/updated files
           VALIDATE_ALL_CODEBASE: false
