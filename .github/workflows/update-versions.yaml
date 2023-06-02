@@ -24,7 +24,7 @@ on:
         required: true
         type: string
   schedule:
-    - cron: "0 * * * *"
+    - cron: "0 12 * * *"
 
 jobs:
 
