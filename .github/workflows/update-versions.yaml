@@ -3,28 +3,40 @@ name: Update upstream releases
 on:
   workflow_dispatch:
     inputs:
-      cli-version: 
+      cli-version:
         description: The new CLI version to use, no v prefix.
         required: true
         type: string
-      cloud-version: 
+      cloud-version:
         description: The new Cloud version to use, no v prefix.
         required: true
         type: string
-      cloud-e2e-version: 
+      cloud-e2e-version:
         description: The new cloud-e2e version to use, no v prefix.
         required: true
         type: string
-      core-fluent-bit-version: 
+      core-fluent-bit-version:
         description: The new Core Fluent Bit version to use, no v prefix.
         required: true
         type: string
-      core-version: 
+      core-version:
         description: The new Core version to use, no v prefix.
         required: true
         type: string
+      core-operator-version:
+        description: The new Core Operator version to use, no v prefix.
+        required: true
+        type: string
+      frontend-version:
+        description: The new Frontend version to use, no v prefix.
+        required: true
+        type: string
+      lua-sandbox-version:
+        description: The new Cloud LUA Sandbox version to use, no v prefix.
+        required: true
+        type: string
   schedule:
-    - cron: "0 12 * * *"
+    - cron: "0 7 * * *"
 
 jobs:
 
@@ -55,11 +67,32 @@ jobs:
       repo: core-fluent-bit
     secrets:
       token: ${{ secrets.CI_PAT }}
-      
+
   get-core-release:
     uses: ./.github/workflows/get-latest-tag.yaml
     with:
       repo: core
+    secrets:
+      token: ${{ secrets.CI_PAT }}
+
+  get-core-operator-release:
+    uses: ./.github/workflows/get-latest-tag.yaml
+    with:
+      repo: core-operator
+    secrets:
+      token: ${{ secrets.CI_PAT }}
+
+  get-frontend-release:
+    uses: ./.github/workflows/get-latest-tag.yaml
+    with:
+      repo: frontend
+    secrets:
+      token: ${{ secrets.CI_PAT }}
+
+  get-lua-sandbox-release:
+    uses: ./.github/workflows/get-latest-tag.yaml
+    with:
+      repo: cloud-lua-sandbox
     secrets:
       token: ${{ secrets.CI_PAT }}
 
@@ -72,6 +105,9 @@ jobs:
       - get-cloud-e2e-release
       - get-core-fluent-bit-release
       - get-core-release
+      - get-core-operator-release
+      - get-frontend-release
+      - get-lua-sandbox-release
     permissions:
       contents: read
       # Not required as we use CI_PAT directly so we can trigger workflows
@@ -86,15 +122,19 @@ jobs:
         # Note we also cope with empty versions provided on input - this will then use latest.
         run: |
           jq '
-          .versions.cli = "${{ inputs.cli-version || needs.get-cli-release.outputs.semver-tag }}" | 
-          .versions.cloud = "${{ inputs.cloud-version || needs.get-cloud-release.outputs.semver-tag }}" | 
-          .versions.cloud_e2e = "${{ inputs.cloud-e2e-version || needs.get-cloud-e2e-release.outputs.semver-tag }}" | 
-          .versions.core_fluent_bit = "${{ inputs.core-fluent-bit-version || needs.get-core-fluent-bit-release.outputs.semver-tag }}" | 
-          .versions.core = "${{ inputs.core-version || needs.get-core-release.outputs.semver-tag }}"' ./component-config.json | tee ./component-config-new.json
+          .versions.cli = "${{ inputs.cli-version || needs.get-cli-release.outputs.semver-tag }}" |
+          .versions.cloud = "${{ inputs.cloud-version || needs.get-cloud-release.outputs.semver-tag }}" |
+          .versions.cloud_e2e = "${{ inputs.cloud-e2e-version || needs.get-cloud-e2e-release.outputs.semver-tag }}" |
+          .versions.core_fluent_bit = "${{ inputs.core-fluent-bit-version || needs.get-core-fluent-bit-release.outputs.semver-tag }}" |
+          .versions.core = "${{ inputs.core-version || needs.get-core-release.outputs.semver-tag }}" |
+          .versions.core_operator = "${{ inputs.core-operator-version || needs.get-core-operator-release.outputs.semver-tag }}" |
+          .versions.frontend = "${{ inputs.frontend-version || needs.get-frontend-release.outputs.semver-tag }}" |
+          .versions.lua_sandbox = "${{ inputs.lua-sandbox-version || needs.get-lua-sandbox-release.outputs.semver-tag }}"' ./component-config.json | tee ./component-config-new.json
           mv -f ./component-config-new.json ./component-config.json
         shell: bash
 
       - name: Generate PR - runs all the tests
+        id: cpr
         uses: peter-evans/create-pull-request@v5
         with:
           commit-message: 'ci: update to latest versions'
@@ -112,8 +152,24 @@ jobs:
             - Cloud E2E: ${{ inputs.cloud-e2e-version || needs.get-cloud-release.outputs.tag }}
             - Core Fluent Bit: ${{ inputs.core-fluent-bit-version || needs.get-core-fluent-bit-release.outputs.tag }}
             - Core: ${{ inputs.core-version || needs.get-core-release.outputs.tag }}
+            - Core Operator: ${{ inputs.core-operator-version || needs.get-core-operator-release.outputs.tag }}
+            - Frontend: ${{ inputs.frontend-version || needs.get-frontend-release.outputs.tag }}
+            - Cloud LUA Sandbox: ${{ inputs.lua-sandbox-version || needs.get-lua-sandbox-release.outputs.tag }}
 
             Github info:
             - Created by ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
             - Auto-generated by create-pull-request: https://github.com/peter-evans/create-pull-request
           draft: false
+
+      - name: Check outputs
+        if: ${{ steps.cpr.outputs.pull-request-number }}
+        run: |
+          echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
+          echo "Pull Request URL - ${{ steps.cpr.outputs.pull-request-url }}"
+        shell: bash
+
+      - name: Enable Pull Request Automerge
+        if: ${{ steps.cpr.outputs.pull-request-number }}
+        run: gh pr merge --squash --auto "${{ steps.cpr.outputs.pull-request-number }}"
+        env:
+          GH_TOKEN: ${{ secrets.CI_PAT }}
