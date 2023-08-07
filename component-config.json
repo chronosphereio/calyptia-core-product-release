@@ -1,9 +1,12 @@
 {
   "versions": {
     "cli": "1.4.9",
-    "cloud": "0.14.0",
+    "cloud": "1.4.0",
     "cloud_e2e": "0.14.0",
     "core_fluent_bit": "23.8.1",
-    "core": "1.2.4"
+    "core": "1.2.4",
+    "core_operator": "1.0.12",
+    "frontend": "1.0.2",
+    "lua_sandbox": "2.1.5"
   }
 }

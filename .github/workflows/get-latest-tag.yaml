@@ -2,24 +2,24 @@ name: Get latest tag
 on:
   workflow_call:
     inputs:
-      repo: 
+      repo:
         description: The repository we want the latest tag for.
         required: true
         type: string
-      org: 
+      org:
         description: The organisation containing the repo we want the latest tag for.
         required: false
         type: string
         default: calyptia
     secrets:
-      token: 
+      token:
         description: The Github token to use for authentication with the repository.
         required: true
     outputs:
-      tag: 
+      tag:
         description: The tag used to create the release.
         value: ${{ jobs.get-release.outputs.tag }}
-      semver-tag: 
+      semver-tag:
         description: The tag used to create the release without a 'v' prefix
         value: ${{ jobs.get-release.outputs.semver-tag }}
 jobs:
