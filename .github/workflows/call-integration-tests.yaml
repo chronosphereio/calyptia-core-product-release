@@ -54,6 +54,13 @@
       env:
         # No versions for cloud image yet: https://app.asana.com/0/1205042382663691/1205262887299330/f
         CALYPTIA_CLOUD_IMAGE: ghcr.io/calyptia/cloud/all-in-one:main
+        AWS_EC2_METADATA_DISABLED: true
+        FLUENTD_VERSION: v1.2-debian
+        CALYPTIA_CLI_VERSION: ${{ inputs.cli-version }}
+        CALYPTIA_CORE_IMAGE: ${{ inputs.core-image }}
+        CALYPTIA_CORE_OPERATOR_IMAGE: ${{ inputs.core-operator-image }}
+        CALYPTIA_CORE_OPERATOR_FROM_CLOUD_IMAGE: ${{ inputs.core-operator-from-cloud-image }}
+        CALYPTIA_CORE_OPERATOR_TO_CLOUD_IMAGE: ${{ inputs.core-operator-to-cloud-image }}
       steps:
         - name: Install dependencies
           run: |
@@ -119,11 +126,7 @@
 
             docker pull $CALYPTIA_CORE_OPERATOR_FROM_CLOUD_IMAGE
             kind load docker-image $CALYPTIA_CORE_OPERATOR_FROM_CLOUD_IMAGE
-          env:
-            CALYPTIA_CORE_IMAGE: ${{ inputs.core-image }}
-            CALYPTIA_CORE_OPERATOR_IMAGE: ${{ inputs.core-operator-image }}
-            CALYPTIA_CORE_OPERATOR_FROM_CLOUD_IMAGE: ${{ inputs.core-operator-from-cloud-image }}
-            CALYPTIA_CORE_OPERATOR_TO_CLOUD_IMAGE: ${{ inputs.core-operator-to-cloud-image }}
+          shell: bash
 
         - name: Set up Cloud SDK
           uses: google-github-actions/setup-gcloud@v1
@@ -133,14 +136,7 @@
             ./run-bats.sh
           shell: bash
           timeout-minutes: 30
-          env:
-            AWS_EC2_METADATA_DISABLED: true
-            FLUENTD_VERSION: v1.2-debian
-            CALYPTIA_CLI_VERSION: ${{ inputs.cli-version }}
-            CALYPTIA_CORE_IMAGE: ${{ inputs.core-image }}
-            CALYPTIA_CORE_OPERATOR_IMAGE: ${{ inputs.core-operator-image }}
-            CALYPTIA_CORE_OPERATOR_FROM_CLOUD_IMAGE: ${{ inputs.core-operator-from-cloud-image }}
-            CALYPTIA_CORE_OPERATOR_TO_CLOUD_IMAGE: ${{ inputs.core-operator-to-cloud-image }}
+
 
         - name: Dump pod logs
           if: always()
