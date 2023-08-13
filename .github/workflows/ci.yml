@@ -2,7 +2,7 @@
 name: CI - test (and release)
 on:
   push:
-    branches: 
+    branches:
       - main
     tags:
       - "v*"
@@ -19,6 +19,9 @@ jobs:
       cloud-e2e-version: ${{ steps.get-cloud-e2e-version.outputs.version }}
       core-fluent-bit-version: ${{ steps.get-core-fluent-bit-version.outputs.version }}
       core-version: ${{ steps.get-core-version.outputs.version }}
+      core-operator-version: ${{ steps.get-core-operator-version.outputs.version }}
+      frontend-version: ${{ steps.get-frontend-version.outputs.version }}
+      lua-sandbox-version: ${{ steps.get-lua-sandbox-version.outputs.version }}
     permissions:
       contents: read
     steps:
@@ -66,6 +69,27 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
         shell: bash
 
+      - id: get-core-operator-version
+        run: |
+          version=$( jq -cr .versions.core_operator ./component-config.json )
+          echo "Found version: $version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+        shell: bash
+
+      - id: get-frontend-version
+        run: |
+          version=$( jq -cr .versions.frontend ./component-config.json )
+          echo "Found version: $version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+        shell: bash
+
+      - id: get-lua-sandbox-version
+        run: |
+          version=$( jq -cr .versions.lua_sandbox ./component-config.json )
+          echo "Found version: $version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+        shell: bash
+
   ci-internal:
     name: Detect an internal only update (not a release)
     # This guards the dependent jobs as well
@@ -75,141 +99,27 @@ jobs:
     steps:
       - run: echo "Detected internal release"
 
-  ci-integration-test:
-    name: Run integration tests
-    runs-on: ubuntu-latest
+  ci-e2e-tests:
     needs:
       - ci-internal
       - ci-get-metadata
-    strategy:
-      fail-fast: true
-      matrix:
-        k8s-release:
-          - 'v1.25.0'
-          - 'v1.24.4'
-          - 'v1.23.5'
-    permissions:
-      contents: read
-      packages: read
-      id-token: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Determine e2e ref to check out
-        # Copes with a tagged release, main or a commit/branch
-        id: e2e-ref
-        run: |
-          ref="$INPUT_VERSION"
-          if [[ "$ref" =~ ^v?([0-9]+\.[0-9]+\.[0-9])+$ ]] ; then
-            echo "Detected tag version: $ref"
-            ref=v${BASH_REMATCH[1]}
-          fi
-          echo "Determined to use ref: $ref"
-          echo "ref=$ref" >> "$GITHUB_OUTPUT"
-        shell: bash
-        env:
-          INPUT_VERSION: ${{ needs.ci-get-metadata.outputs.cloud-e2e-version }}
-
-      - name: Checkout cloud-e2e
-        uses: actions/checkout@v3
-        with:
-          repository: calyptia/cloud-e2e
-          token: ${{ secrets.CI_PAT }}
-          ref: ${{ steps.e2e-ref.outputs.ref }}
-          path: cloud-e2e
-
-      - name: Log in to the Container registry
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ secrets.CI_USERNAME }}
-          password: ${{ secrets.CI_PAT }}
-
-      - name: Create k8s Kind Cluster
-        uses: helm/kind-action@v1.8.0
-        with:
-          node_image: kindest/node:${{ matrix.k8s-release }}
-          cluster_name: kind
-
-      - name: Install dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y httpie jq
-        shell: bash
-
-      - name: Setup BATS
-        uses: mig4/setup-bats@v1
-        with:
-          bats-version: 1.8.2
-
-      - name: Deploy log forwarding to stdout for FB container
-        run: |
-          /bin/bash cloud-e2e/helpers/setup-log-forwarding.bash
-        shell: bash
-
-      - name: Load required images in the kind cluster
-        run: |
-          # TODO: requires https://github.com/calyptia/cloud/issues/793
-          # docker pull $CALYPTIA_CLOUD_IMAGE:$CALYPTIA_CLOUD_IMAGE_TAG
-          docker pull $CALYPTIA_CLOUD_IMAGE:main
-          docker tag $CALYPTIA_CLOUD_IMAGE:main $CALYPTIA_CLOUD_IMAGE:$CALYPTIA_CLOUD_IMAGE_TAG
-          kind load docker-image $CALYPTIA_CLOUD_IMAGE:$CALYPTIA_CLOUD_IMAGE_TAG
-          
-          docker pull $CALYPTIA_CORE_IMAGE:$CALYPTIA_CORE_IMAGE_TAG
-          kind load docker-image $CALYPTIA_CORE_IMAGE:$CALYPTIA_CORE_IMAGE_TAG
-          
-          docker pull $CALYPTIA_CORE_SIDECAR_IMAGE:$CALYPTIA_CORE_SIDECAR_IMAGE_TAG
-          kind load docker-image $CALYPTIA_CORE_SIDECAR_IMAGE:$CALYPTIA_CORE_SIDECAR_IMAGE_TAG
-        env:
-          CALYPTIA_CLOUD_IMAGE: ghcr.io/calyptia/cloud/all-in-one
-          # TODO: requires https://github.com/calyptia/cloud/issues/793
-          CALYPTIA_CLOUD_IMAGE_TAG: ${{ needs.ci-get-metadata.outputs.cloud-version }}
-          CALYPTIA_CORE_IMAGE: ghcr.io/calyptia/core
-          CALYPTIA_CORE_IMAGE_TAG: v${{ needs.ci-get-metadata.outputs.core-version }}
-          # TODO: deprecated
-          CALYPTIA_CORE_SIDECAR_IMAGE: ghcr.io/calyptia/core-sidecar
-          CALYPTIA_CORE_SIDECAR_IMAGE_TAG: main
-
-      - uses: 'google-github-actions/auth@v1'
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-
-      - uses: google-github-actions/setup-gcloud@v1
-
-      - name: Run bats tests
-        run: |
-          ./run-bats.sh
-        shell: bash
-        timeout-minutes: 30
-        env:
-          CALYPTIA_CLOUD_IMAGE: ghcr.io/calyptia/cloud/all-in-one
-          CALYPTIA_CLOUD_IMAGE_TAG: ${{ needs.ci-get-metadata.outputs.cloud-version }}
-          CALYPTIA_CORE_IMAGE: ghcr.io/calyptia/core
-          CALYPTIA_CORE_IMAGE_TAG: ${{ needs.ci-get-metadata.outputs.core-version }}
-          CALYPTIA_CLI_IMAGE: ghcr.io/calyptia/cli
-          CALYPTIA_CLI_IMAGE_TAG: ${{ needs.ci-get-metadata.outputs.cli-version }}
-          CALYPTIA_CORE_SIDECAR_IMAGE: ghcr.io/calyptia/core-sidecar
-          CALYPTIA_CORE_SIDECAR_IMAGE_TAG: main
-        working-directory: cloud-e2e
-        
-      - name: Kubernetes test namespace report
-        uses: jupyterhub/action-k8s-namespace-report@v1
-        if: always()
-        with:
-          namespace: test
-
-      - name: Dump pod logs on failure
-        if: failure()
-        continue-on-error: true
-        run: |
-          kubectl get pods --all-namespaces -o wide --show-labels || true
-          export POD_NAME=$(kubectl get pods -l "app.kubernetes.io/name=fluent-bit,app.kubernetes.io/instance=fluent-bit" -o jsonpath="{.items[0].metadata.name}")
-          kubectl logs $POD_NAME
-
-          wget https://raw.githubusercontent.com/johanhaleby/kubetail/master/kubetail
-          /bin/bash ./kubetail --follow false --previous false --colored-output false --namespace test || true
-        shell: bash
+    uses: calyptia/cloud-e2e/.github/workflows/call-integration-tests.yaml@main
+    with:
+      cli-version: v${{ needs.ci-get-metadata.outputs.cli-version }}
+      cli-image: ghcr.io/calyptia/cli:${{ needs.ci-get-metadata.outputs.cli-version }}
+      cloud-image: ghcr.io/calyptia/cloud/all-in-one:${{ needs.ci-get-metadata.outputs.cloud-version }}
+      core-image: ghcr.io/calyptia/core:${{ needs.ci-get-metadata.outputs.core-version }}
+      core-operator-image: ghcr.io/calyptia/core-operator:${{ needs.ci-get-metadata.outputs.core-operator-version }}
+      core-operator-from-cloud-image: ghcr.io/calyptia/core-operator/sync-from-cloud:${{ needs.ci-get-metadata.outputs.core-operator-version }}
+      core-operator-to-cloud-image: ghcr.io/calyptia/core-operator/sync-to-cloud:${{ needs.ci-get-metadata.outputs.core-operator-version }}
+      # Not supported yet as no tags/releases for e2e
+      # ref: ${{ needs.ci-get-metadata.outputs.cloud-e2e-version }}
+    secrets:
+      registry-username: ${{ secrets.CI_USERNAME }}
+      registry-password: ${{ secrets.CI_PAT }}
+      # Replace with playground key after: https://app.asana.com/0/1205042382663691/1205231066738712/f
+      google-access-key: ${{ secrets.GCP_SA_KEY }}
+      github-token: ${{ secrets.GI_PAT }}
 
   ci-release:
     name: Create official release
@@ -220,7 +130,8 @@ jobs:
     permissions:
       contents: write
     steps:
-      # TODO: create release notes from other components
+      - name: Checkout
+        uses: actions/checkout@v3
 
       - name: Create release for tag
         uses: softprops/action-gh-release@v1
@@ -231,6 +142,9 @@ jobs:
             - Cloud: ${{ needs.ci-get-metadata.outputs.cloud-version }}
             - Core: ${{ needs.ci-get-metadata.outputs.core-version }}
             - Core Fluent Bit: ${{ needs.ci-get-metadata.outputs.core-fluent-bit-version }}
+            - Core Operator: ${{ needs.ci-get-metadata.outputs.core-operator-version }}
+            - Frontend: ${{ needs.ci-get-metadata.outputs.frontend-version }}
+            - LUA Sandbox: ${{ needs.ci-get-metadata.outputs.lua-sandbox-version }}
           fail_on_unmatched_files: false
           files: |
             *.json
