@@ -107,7 +107,9 @@ jobs:
     with:
       cli-version: v${{ needs.ci-get-metadata.outputs.cli-version }}
       cli-image: ghcr.io/calyptia/cli:${{ needs.ci-get-metadata.outputs.cli-version }}
-      cloud-image: ghcr.io/calyptia/cloud/all-in-one:v${{ needs.ci-get-metadata.outputs.cloud-version }}
+      # No versions for cloud image yet: https://app.asana.com/0/1205042382663691/1205262887299330/f
+      # cloud-image: ghcr.io/calyptia/cloud/all-in-one:${{ needs.ci-get-metadata.outputs.cloud-version }}
+      cloud-image: ghcr.io/calyptia/cloud/all-in-one:main
       core-image: ghcr.io/calyptia/core:${{ needs.ci-get-metadata.outputs.core-version }}
       core-operator-image: ghcr.io/calyptia/core-operator:${{ needs.ci-get-metadata.outputs.core-operator-version }}
       core-operator-from-cloud-image: ghcr.io/calyptia/core-operator/sync-from-cloud:${{ needs.ci-get-metadata.outputs.core-operator-version }}
