@@ -106,7 +106,8 @@ jobs:
     uses: calyptia/cloud-e2e/.github/workflows/call-integration-tests.yaml@main
     with:
       cli-version: v${{ needs.ci-get-metadata.outputs.cli-version }}
-      cli-image: ghcr.io/calyptia/cli:${{ needs.ci-get-metadata.outputs.cli-version }}
+      # No longer used
+      # cli-image: ghcr.io/calyptia/cli:${{ needs.ci-get-metadata.outputs.cli-version }}
       # No versions for cloud image yet: https://app.asana.com/0/1205042382663691/1205262887299330/f
       # cloud-image: ghcr.io/calyptia/cloud/all-in-one:${{ needs.ci-get-metadata.outputs.cloud-version }}
       cloud-image: ghcr.io/calyptia/cloud/all-in-one:main
