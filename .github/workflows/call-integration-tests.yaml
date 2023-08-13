@@ -46,10 +46,14 @@
       strategy:
         fail-fast: false
         matrix:
+          # Be aware the KIND and K8S image versions may need to be compatible
+          # https://github.com/kubernetes-sigs/kind/releases/tag/v0.20.0
           k8s-release:
-            - 'v1.25.0'
-            - 'v1.24.4'
-            - 'v1.23.5'
+            - 'v1.27.3'
+            - 'v1.26.6'
+            - 'v1.25.11'
+            - 'v1.24.15'
+            - 'v1.23.17'
       runs-on: ${{ inputs.runner || 'ubuntu-latest' }}
       env:
         # No versions for cloud image yet: https://app.asana.com/0/1205042382663691/1205262887299330/f
@@ -87,11 +91,13 @@
 
         # This is required for client tests that uses core instance/pipeline metrics.
         - name: Create k8s Kind Cluster
-          uses: helm/kind-action@v1.7.0
+          # Ensure to align version here with K8S image versions used
+          uses: helm/kind-action@v1.8.0
           timeout-minutes: 5
           with:
             node_image: kindest/node:${{ matrix.k8s-release }}
             cluster_name: kind
+            wait: 300s
 
         - id: auth
           uses: google-github-actions/auth@v1
@@ -110,20 +116,27 @@
             /bin/bash ./helpers/setup-log-forwarding.bash
           shell: bash
 
-        - name: Load required images into kind cluster.
-          run: |
+        - run: |
             docker pull $CALYPTIA_CLOUD_IMAGE
             kind load docker-image $CALYPTIA_CLOUD_IMAGE
+          shell: bash
 
+        - run: |
             docker pull $CALYPTIA_CORE_IMAGE
             kind load docker-image $CALYPTIA_CORE_IMAGE
+          shell: bash
 
+        - run: |
             docker pull $CALYPTIA_CORE_OPERATOR_IMAGE
             kind load docker-image $CALYPTIA_CORE_OPERATOR_IMAGE
+          shell: bash
 
+        - run: |
             docker pull $CALYPTIA_CORE_OPERATOR_TO_CLOUD_IMAGE
             kind load docker-image $CALYPTIA_CORE_OPERATOR_TO_CLOUD_IMAGE
+          shell: bash
 
+        - run: |
             docker pull $CALYPTIA_CORE_OPERATOR_FROM_CLOUD_IMAGE
             kind load docker-image $CALYPTIA_CORE_OPERATOR_FROM_CLOUD_IMAGE
           shell: bash
