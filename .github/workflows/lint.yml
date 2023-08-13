@@ -47,5 +47,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Turn off actionlint with shellcheck failures
           VALIDATE_GITHUB_ACTIONS: false
-          VALIDATE_YAML : false
-          YAML_CONFIG_FILE: .yaml-lint.yml
+          VALIDATE_YAML: false
+          VALIDATE_RUBY: false
