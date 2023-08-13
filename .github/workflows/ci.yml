@@ -99,15 +99,18 @@ jobs:
     steps:
       - run: echo "Detected internal release"
 
+
   ci-e2e-tests:
     needs:
       - ci-internal
       - ci-get-metadata
-    uses: calyptia/cloud-e2e/.github/workflows/call-integration-tests.yaml@main
+    # We cannot run this from a public repo as the cloud-e2e repo is private so even though it shares workflows with the Calyptia org,
+    # they can only be run from a private calling repo.
+    # uses: calyptia/cloud-e2e/.github/workflows/call-integration-tests.yaml@main
+    # Instead we have to replicate the same workflow locally
+    uses: ./.github/workflows/call-integration-tests.yaml
     with:
       cli-version: v${{ needs.ci-get-metadata.outputs.cli-version }}
-      # No longer used
-      # cli-image: ghcr.io/calyptia/cli:${{ needs.ci-get-metadata.outputs.cli-version }}
       # No versions for cloud image yet: https://app.asana.com/0/1205042382663691/1205262887299330/f
       # cloud-image: ghcr.io/calyptia/cloud/all-in-one:${{ needs.ci-get-metadata.outputs.cloud-version }}
       cloud-image: ghcr.io/calyptia/cloud/all-in-one:main
@@ -115,8 +118,6 @@ jobs:
       core-operator-image: ghcr.io/calyptia/core-operator:${{ needs.ci-get-metadata.outputs.core-operator-version }}
       core-operator-from-cloud-image: ghcr.io/calyptia/core-operator/sync-from-cloud:${{ needs.ci-get-metadata.outputs.core-operator-version }}
       core-operator-to-cloud-image: ghcr.io/calyptia/core-operator/sync-to-cloud:${{ needs.ci-get-metadata.outputs.core-operator-version }}
-      # Not supported yet as no tags/releases for e2e
-      # ref: ${{ needs.ci-get-metadata.outputs.cloud-e2e-version }}
     secrets:
       registry-username: ${{ secrets.CI_USERNAME }}
       registry-password: ${{ secrets.CI_PAT }}

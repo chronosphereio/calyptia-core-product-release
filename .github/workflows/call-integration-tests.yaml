@@ -1,0 +1,177 @@
+---
+  name: Reusable workflow to run integration tests
+  on:
+    workflow_call:
+      inputs:
+        cli-version:
+          type: string
+          required: true
+          description: standard release version of the calyptia cli to use.
+        core-image:
+          type: string
+          required: true
+          description: docker image of calyptia-core
+        core-operator-image:
+          type: string
+          required: true
+          description: docker image of calyptia/core-operator
+        core-operator-from-cloud-image:
+          type: string
+          required: true
+          description: docker image of calyptia/core-operator
+        core-operator-to-cloud-image:
+          type: string
+          required: true
+          description: docker image of calyptia/core-operator
+        runner:
+          description: The runner to use for tests.
+          type: string
+          required: false
+          default: actuated-4cpu-16gb
+      secrets:
+        registry-username:
+          description: ci username to use for login into container registry
+          required: true
+        registry-password:
+          description: ci password to use for login into container registry
+          required: true
+        google-access-key:
+          description: The GCP access key.
+          required: true
+        github-token:
+          description: The Github token for checking out the code.
+          required: true
+  jobs:
+    run-integration-tests:
+      strategy:
+        fail-fast: false
+        matrix:
+          k8s-release:
+            - 'v1.25.0'
+            - 'v1.24.4'
+            - 'v1.23.5'
+      runs-on: ${{ inputs.runner || 'ubuntu-latest' }}
+      env:
+        # No versions for cloud image yet: https://app.asana.com/0/1205042382663691/1205262887299330/f
+        CALYPTIA_CLOUD_IMAGE: ghcr.io/calyptia/cloud/all-in-one:main
+      steps:
+        - name: Install dependencies
+          run: |
+            sudo apt-get update
+            sudo apt-get install -y netcat lsof parallel httpie jq time bc
+          shell: bash
+
+        - name: Set up Actuated mirror
+          if: ${{ contains(inputs.runner, 'actuated') }}
+          uses: self-actuated/hub-mirror@master
+
+        - name: Checkout the Code
+          uses: actions/checkout@v3
+          with:
+            repository: calyptia/cloud-e2e
+            token: ${{ secrets.github-token }}
+
+        - name: Log in to the Container registry
+          uses: docker/login-action@v2
+          with:
+            registry: ghcr.io
+            username: ${{ secrets.registry-username }}
+            password: ${{ secrets.registry-password }}
+
+        # This is required for client tests that uses core instance/pipeline metrics.
+        - name: Create k8s Kind Cluster
+          uses: helm/kind-action@v1.7.0
+          timeout-minutes: 5
+          with:
+            node_image: kindest/node:${{ matrix.k8s-release }}
+            cluster_name: kind
+
+        - id: auth
+          uses: google-github-actions/auth@v1
+          with:
+            credentials_json: ${{ secrets.google-access-key }}
+            export_environment_variables: true
+            create_credentials_file: true
+
+        - name: Setup BATS
+          uses: mig4/setup-bats@v1
+          with:
+            bats-version: 1.9.0
+
+        - name: Deploy log forwarding to stdout for FB container
+          run: |
+            /bin/bash ./helpers/setup-log-forwarding.bash
+          shell: bash
+
+        - name: Load required images into kind cluster.
+          run: |
+            docker pull $CALYPTIA_CLOUD_IMAGE
+            kind load docker-image $CALYPTIA_CLOUD_IMAGE
+
+            docker pull $CALYPTIA_CORE_IMAGE
+            kind load docker-image $CALYPTIA_CORE_IMAGE
+
+            docker pull $CALYPTIA_CORE_OPERATOR_IMAGE
+            kind load docker-image $CALYPTIA_CORE_OPERATOR_IMAGE
+
+            docker pull $CALYPTIA_CORE_OPERATOR_TO_CLOUD_IMAGE
+            kind load docker-image $CALYPTIA_CORE_OPERATOR_TO_CLOUD_IMAGE
+
+            docker pull $CALYPTIA_CORE_OPERATOR_FROM_CLOUD_IMAGE
+            kind load docker-image $CALYPTIA_CORE_OPERATOR_FROM_CLOUD_IMAGE
+          env:
+            CALYPTIA_CORE_IMAGE: ${{ inputs.core-image }}
+            CALYPTIA_CORE_OPERATOR_IMAGE: ${{ inputs.core-operator-image }}
+            CALYPTIA_CORE_OPERATOR_FROM_CLOUD_IMAGE: ${{ inputs.core-operator-from-cloud-image }}
+            CALYPTIA_CORE_OPERATOR_TO_CLOUD_IMAGE: ${{ inputs.core-operator-to-cloud-image }}
+
+        - name: Set up Cloud SDK
+          uses: google-github-actions/setup-gcloud@v1
+
+        - name: Run bats tests
+          run: |
+            ./run-bats.sh
+          shell: bash
+          timeout-minutes: 30
+          env:
+            AWS_EC2_METADATA_DISABLED: true
+            FLUENTD_VERSION: v1.2-debian
+            CALYPTIA_CLI_VERSION: ${{ inputs.cli-version }}
+            CALYPTIA_CORE_IMAGE: ${{ inputs.core-image }}
+            CALYPTIA_CORE_OPERATOR_IMAGE: ${{ inputs.core-operator-image }}
+            CALYPTIA_CORE_OPERATOR_FROM_CLOUD_IMAGE: ${{ inputs.core-operator-from-cloud-image }}
+            CALYPTIA_CORE_OPERATOR_TO_CLOUD_IMAGE: ${{ inputs.core-operator-to-cloud-image }}
+
+        - name: Dump pod logs
+          if: always()
+          continue-on-error: true
+          run: |
+            kubectl cluster-info || true
+            echo '-------------------------------------------------------------------------------'
+            kubectl get pods --all-namespaces || true
+            echo '-------------------------------------------------------------------------------'
+            kubectl describe all -n test || true
+            echo '-------------------------------------------------------------------------------'
+            kubectl get pods --all-namespaces -o wide --show-labels || true
+            export POD_NAME=$(kubectl get pods -l "app.kubernetes.io/name=fluent-bit,app.kubernetes.io/instance=fluent-bit" -o jsonpath="{.items[0].metadata.name}")
+            kubectl logs $POD_NAME
+            echo '-------------------------------------------------------------------------------'
+            wget https://raw.githubusercontent.com/johanhaleby/kubetail/master/kubetail
+            /bin/bash ./kubetail --follow false --previous false --colored-output false --namespace test || true
+            echo '-------------------------------------------------------------------------------'
+          shell: bash
+
+        - name: list images in cluster
+          # Useful to ensure we grab everything
+          continue-on-error: true
+          if: always()
+          # https://kubernetes.io/docs/tasks/access-application-cluster/list-all-running-container-images/
+          run: |
+            docker images
+            echo '-------------------------------------------------------------------------------'
+            kubectl get pods --all-namespaces -o jsonpath="{.items[*].spec.containers[*].image}" |\
+              tr -s '[[:space:]]' '\n' |\
+              sort |\
+              uniq -c
+            echo '-------------------------------------------------------------------------------'
+          shell: bash
