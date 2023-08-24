@@ -176,7 +176,11 @@
             ./run-bats.sh
           shell: bash
           timeout-minutes: 30
-
+          env:
+            REGISTRY_SERVER: ghcr.io
+            REGISTRY_USERNAME: ${{ secrets.registry-username }}
+            REGISTRY_PASSWORD: ${{ secrets.registry-password }}
+            TEST_UID: ${{ github.run_id }}-${{ strategy.job-index }}
 
         - name: Dump pod logs
           if: always()
