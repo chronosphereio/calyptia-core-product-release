@@ -81,6 +81,7 @@
           with:
             repository: calyptia/cloud-e2e
             token: ${{ secrets.github-token }}
+            ref: "v1.1.0"
 
         - name: Log in to the Container registry
           uses: docker/login-action@v2
