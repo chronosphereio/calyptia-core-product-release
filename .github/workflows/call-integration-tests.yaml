@@ -97,7 +97,6 @@
           with:
             repository: calyptia/cloud-e2e
             token: ${{ secrets.github-token }}
-            ref: "v1.1.0"
 
         - name: Log in to the Container registry
           uses: docker/login-action@v2
@@ -106,15 +105,36 @@
             username: ${{ secrets.registry-username }}
             password: ${{ secrets.registry-password }}
 
-        # This is required for client tests that uses core instance/pipeline metrics.
         - name: Create k8s Kind Cluster
-          # Ensure to align version here with K8S image versions used
+          if: ${{ ! contains(inputs.runner, 'actuated') }}
           uses: helm/kind-action@v1.8.0
           timeout-minutes: 5
           with:
             node_image: kindest/node:${{ matrix.k8s-release }}
             cluster_name: kind
             wait: 300s
+
+        - name: Install KIND
+          uses: helm/kind-action@v1.8.0
+          with:
+            install_only: true
+
+        - name: Create KIND cluster using Actuated mirror
+          if: contains(inputs.runner, 'actuated')
+          timeout-minutes: 5
+          run: |
+            kind create cluster --wait 300s --config /dev/stdin <<EOF
+            kind: Cluster
+            apiVersion: kind.x-k8s.io/v1alpha4
+            nodes:
+              - role: control-plane
+                image: kindest/node:${{ matrix.k8s-release }}
+            containerdConfigPatches:
+              - |-
+                [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"]
+                  endpoint = ["http://192.168.128.1:5000"]
+            EOF
+          shell: bash
 
         - id: auth
           uses: google-github-actions/auth@v1
