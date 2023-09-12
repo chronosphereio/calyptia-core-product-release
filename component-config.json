@@ -6,7 +6,7 @@
     "core_fluent_bit": "23.9.6",
     "core": "1.4.0",
     "core_operator": "1.1.2",
-    "frontend": "1.0.4",
+    "frontend": "1.0.6",
     "lua_sandbox": "2.1.7"
   },
   "k8s_kind_versions": [
