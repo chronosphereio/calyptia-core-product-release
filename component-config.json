@@ -1,13 +1,13 @@
 {
   "versions": {
     "cli": "1.7.2",
-    "cloud": "1.4.9",
-    "cloud_e2e": "1.4.9",
+    "cloud": "1.5.0",
+    "cloud_e2e": "1.5.0",
     "core_fluent_bit": "23.9.6",
     "core": "1.4.0",
     "core_operator": "1.1.2",
     "frontend": "1.0.6",
-    "lua_sandbox": "2.1.7"
+    "lua_sandbox": "2.1.8"
   },
   "k8s_kind_versions": [
     "v1.27.3",
