@@ -5,8 +5,8 @@
     "cloud_e2e": "1.5.2",
     "core_fluent_bit": "23.9.8",
     "core": "1.4.0",
-    "core_operator": "2.0.0",
-    "frontend": "1.0.8",
+    "core_operator": "2.0.1",
+    "frontend": "1.0.9",
     "lua_sandbox": "2.1.8"
   },
   "k8s_kind_versions": [
