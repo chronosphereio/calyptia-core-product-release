@@ -7,7 +7,7 @@
     "core": "1.4.0",
     "core_operator": "2.0.6",
     "configmap_reload": "0.11.1",
-    "frontend": "1.0.10",
+    "frontend": "v1.0.10",
     "lua_sandbox": "2.1.8"
   },
   "k8s_kind_versions": [
