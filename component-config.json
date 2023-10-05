@@ -3,12 +3,12 @@
     "cli": "1.7.6",
     "cloud": "1.5.2",
     "cloud_e2e": "1.5.2",
-    "core_fluent_bit": "23.9.9",
+    "core_fluent_bit": "23.10.1",
     "core": "1.4.0",
-    "core_operator": "2.0.6",
+    "core_operator": "2.0.7",
     "configmap_reload": "0.11.1",
-    "frontend": "1.0.10",
-    "lua_sandbox": "2.1.8"
+    "frontend": "1.1.0",
+    "lua_sandbox": "2.2.0"
   },
   "k8s_kind_versions": [
     "v1.27.3",
