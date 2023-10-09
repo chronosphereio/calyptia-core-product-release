@@ -1,11 +1,11 @@
 {
   "versions": {
-    "cli": "1.7.7",
+    "cli": "1.7.9",
     "cloud": "1.5.4",
     "cloud_e2e": "1.5.4",
-    "core_fluent_bit": "23.10.1",
+    "core_fluent_bit": "23.10.2",
     "core": "1.4.0",
-    "core_operator": "2.0.7",
+    "core_operator": "2.0.8",
     "configmap_reload": "0.11.1",
     "frontend": "1.1.0",
     "lua_sandbox": "2.2.0"
