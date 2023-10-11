@@ -28,7 +28,7 @@ on:
             lua-sandbox-version:
                 value: ${{ jobs.get-version.outputs.lua-sandbox-version }}
             k8s-test-versions:
-                value: ${{ jobs.k8s-test-versions.outputs.version }}
+                value: ${{ jobs.get-version.outputs.k8s-test-versions }}
 jobs:
     get-version:
         name: Get the core-product-release versions
