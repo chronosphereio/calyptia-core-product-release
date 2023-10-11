@@ -50,9 +50,7 @@
           # https://github.com/kubernetes-sigs/kind/releases/tag/v0.20.0
           k8s-release:
             - 'v1.27.3'
-            - 'v1.26.6'
             - 'v1.25.11'
-            - 'v1.24.15'
             - 'v1.23.17'
       runs-on: ${{ inputs.runner || 'ubuntu-latest' }}
       env:
