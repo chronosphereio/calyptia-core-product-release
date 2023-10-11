@@ -27,6 +27,8 @@ on:
                 value: ${{ jobs.get-version.outputs.frontend-version }}
             lua-sandbox-version:
                 value: ${{ jobs.get-version.outputs.lua-sandbox-version }}
+            k8s-test-versions:
+                value: ${{ jobs.k8s-test-versions.outputs.version }}
 jobs:
     get-version:
         name: Get the core-product-release versions
@@ -44,6 +46,7 @@ jobs:
             configmap-reload-version: ${{ steps.configmap-reload-version.outputs.version }}
             frontend-version: ${{ steps.frontend-version.outputs.version }}
             lua-sandbox-version: ${{ steps.lua-sandbox-version.outputs.version }}
+            k8s-test-versions: ${{ steps.k8s-test-versions.outputs.version }}
         steps:
             - uses: actions/checkout@v4
               with:
@@ -57,6 +60,7 @@ jobs:
               shell: bash
 
             - id: cli-version
+              continue-on-error: true
               run: |
                 VERSION=$(jq -r .versions.cli component-config.json)
                 echo "$VERSION"
@@ -64,6 +68,7 @@ jobs:
               shell: bash
 
             - id: cloud-version
+              continue-on-error: true
               run: |
                 VERSION=$(jq -r .versions.cloud component-config.json)
                 echo "$VERSION"
@@ -71,6 +76,7 @@ jobs:
               shell: bash
 
             - id: cloud-e2e-version
+              continue-on-error: true
               run: |
                 VERSION=$(jq -r .versions.cloud_e2e component-config.json)
                 echo "$VERSION"
@@ -78,6 +84,7 @@ jobs:
               shell: bash
 
             - id: core-fluent-bit-version
+              continue-on-error: true
               run: |
                 VERSION=$(jq -r .versions.core_fluent_bit component-config.json)
                 echo "$VERSION"
@@ -85,6 +92,7 @@ jobs:
               shell: bash
 
             - id: core-version
+              continue-on-error: true
               run: |
                 VERSION=$(jq -r .versions.core component-config.json)
                 echo "$VERSION"
@@ -92,6 +100,7 @@ jobs:
               shell: bash
 
             - id: core-operator-version
+              continue-on-error: true
               run: |
                 VERSION=$(jq -r .versions.core_operator component-config.json)
                 echo "$VERSION"
@@ -99,6 +108,7 @@ jobs:
               shell: bash
 
             - id: configmap-reload-version
+              continue-on-error: true
               run: |
                 VERSION=$(jq -r .versions.configmap_reload component-config.json)
                 echo "$VERSION"
@@ -106,6 +116,7 @@ jobs:
               shell: bash
 
             - id: frontend-version
+              continue-on-error: true
               run: |
                 VERSION=$(jq -r .versions.frontend component-config.json)
                 echo "$VERSION"
@@ -113,8 +124,16 @@ jobs:
               shell: bash
 
             - id: lua-sandbox-version
+              continue-on-error: true
               run: |
                 VERSION=$(jq -r .versions.lua_sandbox component-config.json)
+                echo "$VERSION"
+                echo "version=$VERSION" >> $GITHUB_OUTPUT
+              shell: bash
+
+            - id: k8s-test-versions
+              run: |
+                VERSION=$(jq -r .versions.k8s_kind_versions component-config.json)
                 echo "$VERSION"
                 echo "version=$VERSION" >> $GITHUB_OUTPUT
               shell: bash
