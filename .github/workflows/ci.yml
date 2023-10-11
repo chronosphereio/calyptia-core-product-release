@@ -1,107 +1,15 @@
 ---
 name: CI - test (and release)
 on:
-  push:
-    branches:
-      - main
-    tags:
-      - "v*"
   pull_request:
   workflow_dispatch:
 
 jobs:
   ci-get-metadata:
-    name: Get versions
-    runs-on: ubuntu-latest
-    outputs:
-      cli-version: ${{ steps.get-cli-version.outputs.version }}
-      cloud-version: ${{ steps.get-cloud-version.outputs.version }}
-      cloud-e2e-version: ${{ steps.get-cloud-e2e-version.outputs.version }}
-      core-fluent-bit-version: ${{ steps.get-core-fluent-bit-version.outputs.version }}
-      core-version: ${{ steps.get-core-version.outputs.version }}
-      core-operator-version: ${{ steps.get-core-operator-version.outputs.version }}
-      frontend-version: ${{ steps.get-frontend-version.outputs.version }}
-      lua-sandbox-version: ${{ steps.get-lua-sandbox-version.outputs.version }}
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y jq
-        shell: bash
-
-      - id: get-cli-version
-        run: |
-          version=$( jq -cr .versions.cli ./component-config.json )
-          echo "Found version: $version"
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-        shell: bash
-
-      - id: get-cloud-version
-        run: |
-          version=$( jq -cr .versions.cloud ./component-config.json )
-          echo "Found version: $version"
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-        shell: bash
-
-      - id: get-cloud-e2e-version
-        run: |
-          version=$( jq -cr .versions.cloud_e2e ./component-config.json )
-          echo "Found version: $version"
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-        shell: bash
-
-      - id: get-core-version
-        run: |
-          version=$( jq -cr .versions.core ./component-config.json )
-          echo "Found version: $version"
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-        shell: bash
-
-      - id: get-core-fluent-bit-version
-        run: |
-          version=$( jq -cr .versions.core_fluent_bit ./component-config.json )
-          echo "Found version: $version"
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-        shell: bash
-
-      - id: get-core-operator-version
-        run: |
-          version=$( jq -cr .versions.core_operator ./component-config.json )
-          echo "Found version: $version"
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-        shell: bash
-
-      - id: get-frontend-version
-        run: |
-          version=$( jq -cr .versions.frontend ./component-config.json )
-          echo "Found version: $version"
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-        shell: bash
-
-      - id: get-lua-sandbox-version
-        run: |
-          version=$( jq -cr .versions.lua_sandbox ./component-config.json )
-          echo "Found version: $version"
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-        shell: bash
-
-  ci-internal:
-    name: Detect an internal only update (not a release)
-    # This guards the dependent jobs as well
-    if: ${{ ! startsWith(github.ref, 'refs/tags/v') }}
-    runs-on: ubuntu-latest
-    permissions: {}
-    steps:
-      - run: echo "Detected internal release"
+    uses: ./.github/workflows/get-versions.yaml
 
   ci-e2e-tests:
     needs:
-      - ci-internal
       - ci-get-metadata
     # We cannot run this from a public repo as the cloud-e2e repo is private so even though it shares workflows with the Calyptia org,
     # they can only be run from a private calling repo.
@@ -123,31 +31,3 @@ jobs:
       google-access-key: ${{ secrets.GCP_SA_KEY }}
       github-token: ${{ secrets.CI_PAT }}
 
-  ci-release:
-    name: Create official release
-    if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
-    needs:
-      - ci-get-metadata
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Create release for tag
-        uses: softprops/action-gh-release@v1
-        with:
-          body: |
-            Release of Calyptia Core ${{ github.ref_name }}:
-            - CLI: ${{ needs.ci-get-metadata.outputs.cli-version }}
-            - Cloud: ${{ needs.ci-get-metadata.outputs.cloud-version }}
-            - Core: ${{ needs.ci-get-metadata.outputs.core-version }}
-            - Core Fluent Bit: ${{ needs.ci-get-metadata.outputs.core-fluent-bit-version }}
-            - Core Operator: ${{ needs.ci-get-metadata.outputs.core-operator-version }}
-            - Frontend: ${{ needs.ci-get-metadata.outputs.frontend-version }}
-            - LUA Sandbox: ${{ needs.ci-get-metadata.outputs.lua-sandbox-version }}
-          fail_on_unmatched_files: false
-          files: |
-            *.json
-          generate_release_notes: false
