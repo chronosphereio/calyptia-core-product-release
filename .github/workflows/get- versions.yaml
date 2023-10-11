@@ -62,7 +62,7 @@ jobs:
             - id: cli-version
               continue-on-error: true
               run: |
-                VERSION=$(jq -r .versions.cli component-config.json)
+                VERSION=$(jq -cr .versions.cli component-config.json)
                 echo "$VERSION"
                 echo "version=$VERSION" >> $GITHUB_OUTPUT
               shell: bash
@@ -70,7 +70,7 @@ jobs:
             - id: cloud-version
               continue-on-error: true
               run: |
-                VERSION=$(jq -r .versions.cloud component-config.json)
+                VERSION=$(jq -cr .versions.cloud component-config.json)
                 echo "$VERSION"
                 echo "version=$VERSION" >> $GITHUB_OUTPUT
               shell: bash
@@ -78,7 +78,7 @@ jobs:
             - id: cloud-e2e-version
               continue-on-error: true
               run: |
-                VERSION=$(jq -r .versions.cloud_e2e component-config.json)
+                VERSION=$(jq -cr .versions.cloud_e2e component-config.json)
                 echo "$VERSION"
                 echo "version=$VERSION" >> $GITHUB_OUTPUT
               shell: bash
@@ -86,7 +86,7 @@ jobs:
             - id: core-fluent-bit-version
               continue-on-error: true
               run: |
-                VERSION=$(jq -r .versions.core_fluent_bit component-config.json)
+                VERSION=$(jq -cr .versions.core_fluent_bit component-config.json)
                 echo "$VERSION"
                 echo "version=$VERSION" >> $GITHUB_OUTPUT
               shell: bash
@@ -94,7 +94,7 @@ jobs:
             - id: core-version
               continue-on-error: true
               run: |
-                VERSION=$(jq -r .versions.core component-config.json)
+                VERSION=$(jq -cr .versions.core component-config.json)
                 echo "$VERSION"
                 echo "version=$VERSION" >> $GITHUB_OUTPUT
               shell: bash
@@ -102,7 +102,7 @@ jobs:
             - id: core-operator-version
               continue-on-error: true
               run: |
-                VERSION=$(jq -r .versions.core_operator component-config.json)
+                VERSION=$(jq -cr .versions.core_operator component-config.json)
                 echo "$VERSION"
                 echo "version=$VERSION" >> $GITHUB_OUTPUT
               shell: bash
@@ -110,7 +110,7 @@ jobs:
             - id: configmap-reload-version
               continue-on-error: true
               run: |
-                VERSION=$(jq -r .versions.configmap_reload component-config.json)
+                VERSION=$(jq -cr .versions.configmap_reload component-config.json)
                 echo "$VERSION"
                 echo "version=$VERSION" >> $GITHUB_OUTPUT
               shell: bash
@@ -118,7 +118,7 @@ jobs:
             - id: frontend-version
               continue-on-error: true
               run: |
-                VERSION=$(jq -r .versions.frontend component-config.json)
+                VERSION=$(jq -cr .versions.frontend component-config.json)
                 echo "$VERSION"
                 echo "version=$VERSION" >> $GITHUB_OUTPUT
               shell: bash
@@ -126,14 +126,14 @@ jobs:
             - id: lua-sandbox-version
               continue-on-error: true
               run: |
-                VERSION=$(jq -r .versions.lua_sandbox component-config.json)
+                VERSION=$(jq -cr .versions.lua_sandbox component-config.json)
                 echo "$VERSION"
                 echo "version=$VERSION" >> $GITHUB_OUTPUT
               shell: bash
 
             - id: k8s-test-versions
               run: |
-                VERSION=$(jq -r .versions.k8s_kind_versions component-config.json)
+                VERSION=$(jq -cr .k8s_kind_versions component-config.json)
                 echo "$VERSION"
                 echo "version=$VERSION" >> $GITHUB_OUTPUT
               shell: bash
