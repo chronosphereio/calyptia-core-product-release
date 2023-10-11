@@ -1,0 +1,120 @@
+name: Get versions of products
+# Intended to be called by other repositories to provide output versions.
+on:
+    workflow_call:
+        inputs:
+            ref:
+                type: string
+                default: main
+                required: false
+                description: The Github ref to check out of the core-product-release repo
+        outputs:
+            cli-version:
+                value: ${{ jobs.get-version.outputs.cli-version }}
+            cloud-version:
+                value: ${{ jobs.get-version.outputs.cloud-version }}
+            cloud-e2e-version:
+                value: ${{ jobs.get-version.outputs.cloud-e2e-version }}
+            core-fluent-bit-version:
+                value: ${{ jobs.get-version.outputs.core-fluent-bit-version }}
+            core-version:
+                value: ${{ jobs.get-version.outputs.core-version }}
+            core-operator-version:
+                value: ${{ jobs.get-version.outputs.core-operator-version }}
+            configmap-reload-version:
+                value: ${{ jobs.get-version.outputs.configmap-reload-version }}
+            frontend-version:
+                value: ${{ jobs.get-version.outputs.frontend-version }}
+            lua-sandbox-version:
+                value: ${{ jobs.get-version.outputs.lua-sandbox-version }}
+jobs:
+    get-version:
+        name: Get the core-product-release versions
+        runs-on: ubuntu-latest
+        permissions:
+            # Public repo so no token required
+            contents: none
+        outputs:
+            cli-version: ${{ steps.cli-version.outputs.version }}
+            cloud-version: ${{ steps.cloud-version.outputs.version }}
+            cloud-e2e-version: ${{ steps.cloud-e2e-version.outputs.version }}
+            core-fluent-bit-version: ${{ steps.core-fluent-bit-version.outputs.version }}
+            core-version: ${{ steps.core-version.outputs.version }}
+            core-operator-version: ${{ steps.core-operator-version.outputs.version }}
+            configmap-reload-version: ${{ steps.configmap-reload-version.outputs.version }}
+            frontend-version: ${{ steps.frontend-version.outputs.version }}
+            lua-sandbox-version: ${{ steps.lua-sandbox-version.outputs.version }}
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                repository: calyptia/core-product-release
+                ref: ${{ inputs.ref }}
+
+            - name: Install dependencies
+              run: |
+                sudo apt-get update
+                sudo apt-get install -y jq
+              shell: bash
+
+            - id: cli-version
+              run: |
+                VERSION=$(jq -r .versions.cli component-config.json)
+                echo "$VERSION"
+                echo "version=$VERSION" >> $GITHUB_OUTPUT
+              shell: bash
+
+            - id: cloud-version
+              run: |
+                VERSION=$(jq -r .versions.cloud component-config.json)
+                echo "$VERSION"
+                echo "version=$VERSION" >> $GITHUB_OUTPUT
+              shell: bash
+
+            - id: cloud-e2e-version
+              run: |
+                VERSION=$(jq -r .versions.cloud_e2e component-config.json)
+                echo "$VERSION"
+                echo "version=$VERSION" >> $GITHUB_OUTPUT
+              shell: bash
+
+            - id: core-fluent-bit-version
+              run: |
+                VERSION=$(jq -r .versions.core_fluent_bit component-config.json)
+                echo "$VERSION"
+                echo "version=$VERSION" >> $GITHUB_OUTPUT
+              shell: bash
+
+            - id: core-version
+              run: |
+                VERSION=$(jq -r .versions.core component-config.json)
+                echo "$VERSION"
+                echo "version=$VERSION" >> $GITHUB_OUTPUT
+              shell: bash
+
+            - id: core-operator-version
+              run: |
+                VERSION=$(jq -r .versions.core_operator component-config.json)
+                echo "$VERSION"
+                echo "version=$VERSION" >> $GITHUB_OUTPUT
+              shell: bash
+
+            - id: configmap-reload-version
+              run: |
+                VERSION=$(jq -r .versions.configmap_reload component-config.json)
+                echo "$VERSION"
+                echo "version=$VERSION" >> $GITHUB_OUTPUT
+              shell: bash
+
+            - id: frontend-version
+              run: |
+                VERSION=$(jq -r .versions.frontend component-config.json)
+                echo "$VERSION"
+                echo "version=$VERSION" >> $GITHUB_OUTPUT
+              shell: bash
+
+            - id: lua-sandbox-version
+              run: |
+                VERSION=$(jq -r .versions.lua_sandbox component-config.json)
+                echo "$VERSION"
+                echo "version=$VERSION" >> $GITHUB_OUTPUT
+              shell: bash
