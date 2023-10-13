@@ -11,6 +11,7 @@ Each arrow indicates a PR.
 ```mermaid
 graph TD;
    LUA modules-->Core Fluent Bit;
+   LUA modules-->Cloud LUA Sandbox;
    LUA modules-->Core Product Release;
 
    Core Fluent Bit-->Core Operator;
@@ -21,6 +22,10 @@ graph TD;
    Core Operator-->Core Operator releases;
 
    Core Operator chart-->Public chart;
+
+   Cloud-->Core Operator releases;
+   Frontend-->Core Operator releases;
+   Cloud LUA Sandbox-->Core Operator releases;
 
    Core Product Release-->Self hosted chart;
    Self hosted chart-->Public chart;
