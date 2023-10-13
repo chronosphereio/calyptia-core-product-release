@@ -31,25 +31,6 @@ jobs:
       - name: Run markdownlint
         uses: actionshub/markdownlint@v3.1.4
 
-  superlinter-pr:
-    runs-on: ubuntu-latest
-    name: PR - SuperLinter
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - uses: github/super-linter/slim@v5
-        env:
-          # Only include new/updated files
-          VALIDATE_ALL_CODEBASE: false
-          DEFAULT_BRANCH: main
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Turn off actionlint with shellcheck failures
-          VALIDATE_GITHUB_ACTIONS: false
-          VALIDATE_YAML: false
-          VALIDATE_RUBY: false
-
   verify-kind-versions-pr:
     runs-on: ubuntu-latest
     name: PR - check matching KIND versions
