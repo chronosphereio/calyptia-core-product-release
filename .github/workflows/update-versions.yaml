@@ -35,6 +35,10 @@ on:
         description: The new Cloud LUA Sandbox version to use, no v prefix.
         required: true
         type: string
+      lua-modules-version:
+        description: The new LUA Modules version to use, no v prefix.
+        required: true
+        type: string
   schedule:
     - cron: "0 7 * * *"
 
