@@ -17,12 +17,12 @@ graph TD;
    CFB[Core Fluent Bit]-- PR on release -->CO[Core Operator];
    CFB[Core Fluent Bit]-- PR on release -->CPR[Core Product Release];
 
-   CO[Core Operator]-- PR on release -->COC[Core Operator chart};
+   CO[Core Operator]-- PR on release -->COC[Core Operator chart];
    CO[Core Operator]-- PR on release -->CLI;
    CO[Core Operator]-- PR on release -->COR[Core Operator releases];
    CO[Core Operator]-- PR on release -->CPR[Core Product Release];
 
-   COC[Core Operator chart}-->Public chart;
+   COC[Core Operator chart]-->Public chart;
 
    Cloud-->CPR[Core Product Release];
    Frontend-->CPR[Core Product Release];
