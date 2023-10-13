@@ -39,7 +39,7 @@ jobs:
                 delete-branch: true
                 title: 'ci: update to latest Calyptia versions'
                 # We need workflows permission so have to use the CI_PAT
-                token: ${{ secrets.CI_PAT }}
+                token: ${{ secrets.token }}
                 labels: ci,automerge
                 body: |
                   Update Calyptia versions
@@ -62,4 +62,4 @@ jobs:
               if: ${{ steps.cpr.outputs.pull-request-number }}
               run: gh pr merge --squash --auto "${{ steps.cpr.outputs.pull-request-number }}"
               env:
-                GH_TOKEN: ${{ secrets.CI_PAT }}
+                GH_TOKEN: ${{ secrets.token }}
