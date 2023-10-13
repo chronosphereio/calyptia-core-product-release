@@ -2,6 +2,8 @@
 name: CI - test (and release)
 on:
   pull_request:
+    paths:
+      - 'component-config.json'
   workflow_dispatch:
 
 jobs:
