@@ -19,9 +19,41 @@ on:
                 value: ${{ jobs.version-update.outputs.pr || '' }}
                 description: The PR created, if any, or an empty string.
 jobs:
-    version-update:
-        name: Update ${{ inputs.product }} to ${{ inputs.version }}
+    version-checks:
+        name: Sanitise and check inputs
         runs-on: ubuntu-latest
+        outputs:
+            version: ${{ steps.version.outputs.version }}
+            product: ${{ inputs.product }}
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                token: ${{ secrets.token }}
+                repository: calyptia/core-product-release
+
+            - name: Check product exists
+              run: grep -q '${{ inputs.product }}' ./component-config.json
+              shell: bash
+
+            - name: Get numeric version only
+              id: version
+              run: |
+                VERSION=${{ inputs.version }}
+                # Handle stripping the v prefix if present
+                if [[ "$VERSION" =~ ^v?([0-9]+\.[0-9]+\.[0-9]+)$ ]] ; then
+                    VERSION=${BASH_REMATCH[1]}
+                    echo "Valid version string: $VERSION"
+                else
+                    echo "ERROR: Invalid semver string: $VERSION"
+                fi
+                export "version=$VERSION" >> $GITHUB_OUTPUT
+              shell: bash
+
+    version-update:
+        name: Update ${{ needs.version-checks.outputs.product }} to ${{ needs.version-checks.outputs.version }}
+        runs-on: ubuntu-latest
+        needs:
+            - version-checks
         outputs:
             pr: ${{ steps.cpr.outputs.pull-request-number || '' }}
         steps:
@@ -30,7 +62,7 @@ jobs:
                 token: ${{ secrets.token }}
                 repository: calyptia/core-product-release
             - run: |
-                jq '.versions.${{ inputs.product }} = "${{ inputs.version }}"' ./component-config.json | tee ./component-config-new.json
+                jq '.versions.${{ needs.version-checks.outputs.product }} = "${{ needs.version-checks.outputs.version }}"' ./component-config.json | tee ./component-config-new.json
                 mv -f ./component-config-new.json ./component-config.json
               shell: bash
 
@@ -49,7 +81,7 @@ jobs:
                 labels: ci,automerge
                 body: |
                   Update Calyptia versions
-                  - ${{ inputs.product }} = "${{ inputs.version }}"
+                  - ${{ needs.version-checks.outputs.product }} = "${{ needs.version-checks.outputs.version }}"
 
                   Github info:
                   - Created by ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
