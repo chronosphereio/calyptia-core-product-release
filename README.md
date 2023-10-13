@@ -13,33 +13,23 @@ graph TD;
    LM[LUA Modules]-- PR on release -->CFB[Core Fluent Bit];
    LM[LUA Modules]-- PR on release -->CLS[Cloud LUA Sandbox];
    LM[LUA Modules]-- PR on release -->CPR[Core Product Release];
-```
-```mermaid
-graph TD;
+
    CFB[Core Fluent Bit]-- PR on release -->CO[Core Operator];
    CFB[Core Fluent Bit]-- PR on release -->CPR[Core Product Release];
-```
-```mermaid
-graph TD;
+
    CO[Core Operator]-- PR on release -->COC[Core Operator chart];
    CO[Core Operator]-- PR on release -->CLI;
    CO[Core Operator]-- PR on release -->COR[Core Operator releases];
    CO[Core Operator]-- PR on release -->CPR[Core Product Release];
-```
-```mermaid
-graph TD;
-   COC[Core Operator chart]-->Public chart;
-```
-```mermaid
-graph TD;
+
+   COC[Core Operator chart]-->PC[Public chart];
+
    Cloud-->CPR[Core Product Release];
    Frontend-->CPR[Core Product Release];
    CLS[Cloud LUA Sandbox]-- PR on release -->CPR[Core Product Release];
-```
-```mermaid
-graph TD;
+
    CPR[Core Product Release]-- cron poll -->SHC[Self hosted chart];
-   SHC[Self hosted chart]-- PR on release -->Public chart;
+   SHC[Self hosted chart]-- PR on release -->PC[Public chart];
 ```
 
 The Core Product Release repository drives the self-hosted chart updates via a cron job.
