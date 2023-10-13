@@ -10,7 +10,7 @@ Each arrow indicates a PR.
 
 ```mermaid
 graph TD;
-    LUA modules-->B;
+    LM[LUA Modules]-->B;
     A-->C;
     B-->D;
     C-->D;
