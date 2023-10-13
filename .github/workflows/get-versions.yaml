@@ -29,6 +29,8 @@ on:
                 value: ${{ jobs.get-version.outputs.lua-sandbox-version }}
             k8s-test-versions:
                 value: ${{ jobs.get-version.outputs.k8s-test-versions }}
+            lua-modules-version:
+              value: ${{ jobs.get-version.outputs.lua-modules-version }}
 jobs:
     get-version:
         name: Get the core-product-release versions
@@ -46,6 +48,7 @@ jobs:
             configmap-reload-version: ${{ steps.configmap-reload-version.outputs.version }}
             frontend-version: ${{ steps.frontend-version.outputs.version }}
             lua-sandbox-version: ${{ steps.lua-sandbox-version.outputs.version }}
+            lua-modules-version: ${{ steps.lua-modules-version.outputs.version }}
             k8s-test-versions: ${{ steps.k8s-test-versions.outputs.version }}
         steps:
             - uses: actions/checkout@v4
@@ -127,6 +130,14 @@ jobs:
               continue-on-error: true
               run: |
                 VERSION=$(jq -cr .versions.lua_sandbox component-config.json)
+                echo "$VERSION"
+                echo "version=$VERSION" >> $GITHUB_OUTPUT
+              shell: bash
+
+            - id: lua-modules-version
+              continue-on-error: true
+              run: |
+                VERSION=$(jq -cr .versions.lua_modules component-config.json)
                 echo "$VERSION"
                 echo "version=$VERSION" >> $GITHUB_OUTPUT
               shell: bash

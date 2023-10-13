@@ -96,6 +96,13 @@ jobs:
     secrets:
       token: ${{ secrets.CI_PAT }}
 
+  get-lua-modules-release:
+    uses: ./.github/workflows/get-latest-tag.yaml
+    with:
+      repo: lua-modules
+    secrets:
+      token: ${{ secrets.CI_PAT }}
+
   update-versions:
     name: Update versions used
     runs-on: ubuntu-latest
@@ -108,6 +115,7 @@ jobs:
       - get-core-operator-release
       - get-frontend-release
       - get-lua-sandbox-release
+      - get-lua-modules-release
     permissions:
       contents: read
       # Not required as we use CI_PAT directly so we can trigger workflows
@@ -130,6 +138,7 @@ jobs:
           .versions.core_operator = "${{ inputs.core-operator-version || needs.get-core-operator-release.outputs.semver-tag }}" |
           .versions.frontend = "${{ inputs.frontend-version || needs.get-frontend-release.outputs.semver-tag }}" |
           .versions.lua_sandbox = "${{ inputs.lua-sandbox-version || needs.get-lua-sandbox-release.outputs.semver-tag }}"' ./component-config.json | tee ./component-config-new.json
+          .versions.lua_modules = "${{ inputs.lua-modules-version || needs.get-lua-modules-release.outputs.semver-tag }}"' ./component-config.json | tee ./component-config-new.json
           mv -f ./component-config-new.json ./component-config.json
         shell: bash
 
@@ -155,6 +164,7 @@ jobs:
             - Core Operator: ${{ inputs.core-operator-version || needs.get-core-operator-release.outputs.tag }}
             - Frontend: ${{ inputs.frontend-version || needs.get-frontend-release.outputs.tag }}
             - Cloud LUA Sandbox: ${{ inputs.lua-sandbox-version || needs.get-lua-sandbox-release.outputs.tag }}
+            - LUA Modules: ${{ inputs.lua-modules-version || needs.get-lua-modules-release.outputs.tag }}
 
             Github info:
             - Created by ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
