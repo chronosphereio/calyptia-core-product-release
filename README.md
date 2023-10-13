@@ -22,15 +22,15 @@ graph TD;
    CO[Core Operator]-- PR on release -->COR[Core Operator releases];
    CO[Core Operator]-- PR on release -->CPR[Core Product Release];
 
-   COC[Core Operator chart]-->PC[Public chart];
+   COC[Core Operator chart]-- PR on commit -->PC[Public chart];
 
-   CLI-->CPR[Core Product Release];
-   Cloud-->CPR[Core Product Release];
-   Frontend-->CPR[Core Product Release];
+   CLI-- PR on release -->CPR[Core Product Release];
+   Cloud-- PR on release -->CPR[Core Product Release];
+   Frontend-- PR on release -->CPR[Core Product Release];
    CLS[Cloud LUA Sandbox]-- PR on release -->CPR[Core Product Release];
 
    CPR[Core Product Release]-- cron poll -->SHC[Self hosted chart];
-   SHC[Self hosted chart]-- PR on release -->PC[Public chart];
+   SHC[Self hosted chart]-- PR on commit -->PC[Public chart];
 ```
 
 The Core Product Release repository drives the self-hosted chart updates via a cron job.
