@@ -64,9 +64,7 @@
           # https://github.com/kubernetes-sigs/kind/releases/tag/v0.20.0
           k8s-release:
             - 'v1.27.3'
-            - 'v1.26.6'
             - 'v1.25.11'
-            - 'v1.24.15'
             - 'v1.23.17'
       runs-on: ${{ inputs.runner || 'ubuntu-latest' }}
       env:
@@ -85,7 +83,7 @@
         - name: Install dependencies
           run: |
             sudo apt-get update
-            sudo apt-get install -y netcat lsof parallel httpie jq time bc
+            sudo apt-get install -y netcat lsof parallel httpie jq time bc python3 python-is-python3 coreutils
           shell: bash
 
         - name: Set up Actuated mirror
@@ -146,7 +144,7 @@
         - name: Setup BATS
           uses: mig4/setup-bats@v1
           with:
-            bats-version: 1.9.0
+            bats-version: 1.10.0
 
         - name: Deploy log forwarding to stdout for FB container
           run: |
@@ -201,7 +199,7 @@
             REGISTRY_SERVER: ghcr.io
             REGISTRY_USERNAME: ${{ secrets.registry-username }}
             REGISTRY_PASSWORD: ${{ secrets.registry-password }}
-            TEST_UID: ${{ github.run_id }}-${{ strategy.job-index }}
+            TEST_UID: ${{ github.repository }}-${{ github.run_id }}-${{ strategy.job-index }}
 
         - name: Dump pod logs
           if: always()
