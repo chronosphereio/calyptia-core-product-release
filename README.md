@@ -24,6 +24,7 @@ graph TD;
 
    COC[Core Operator chart]-->PC[Public chart];
 
+   CLI-->CPR[Core Product Release];
    Cloud-->CPR[Core Product Release];
    Frontend-->CPR[Core Product Release];
    CLS[Cloud LUA Sandbox]-- PR on release -->CPR[Core Product Release];
