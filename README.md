@@ -10,34 +10,27 @@ Each arrow indicates a PR.
 
 ```mermaid
 graph TD;
-    LM[LUA Modules]-- push a PR -->B;
-    A-->C;
-    B-->D;
-    C-->D;
+   LM[LUA Modules]-- PR on release -->CFB[Core Fluent Bit];
+   LM[LUA Modules]-- PR on release -->CLS[Cloud LUA Sandbox];
+   LM[LUA Modules]-- PR on release -->CPR[Core Product Release];
+
+   CFB[Core Fluent Bit]-- PR on release -->CO[Core Operator];
+   CFB[Core Fluent Bit]-- PR on release -->CPR[Core Product Release];
+
+   CO[Core Operator]-- PR on release -->COC[Core Operator chart};
+   CO[Core Operator]-- PR on release -->CLI;
+   CO[Core Operator]-- PR on release -->COR[Core Operator releases];
+   CO[Core Operator]-- PR on release -->CPR[Core Product Release];
+
+   COC[Core Operator chart}-->Public chart;
+
+   Cloud-->CPR[Core Product Release];
+   Frontend-->CPR[Core Product Release];
+   CLS[Cloud LUA Sandbox]-- PR on release -->CPR[Core Product Release];
+
+   CPR[Core Product Release]-- cron poll -->SHC[Self hosted chart];
+   SHC[Self hosted chart]-- PR on release -->Public chart;
 ```
 
-```mermaid
-graph TD;
-   LUA modules-->Core Fluent Bit;
-   LUA modules-->Cloud LUA Sandbox;
-   LUA modules-->Core Product Release;
-
-   Core Fluent Bit-->Core Operator;
-   Core Fluent Bit-->Core Product Release;
-
-   Core Operator-->Core Operator chart;
-   Core Operator-->CLI;
-   Core Operator-->Core Operator releases;
-
-   Core Operator chart-->Public chart;
-
-   Cloud-->Core Operator releases;
-   Frontend-->Core Operator releases;
-   Cloud LUA Sandbox-->Core Operator releases;
-
-   Core Product Release-->Self hosted chart;
-   Self hosted chart-->Public chart;
-```
-
-The Core Product Release repository drives the self-hosted chart updates via a cron job.
+The CPR[Core Product Release] repository drives the self-hosted chart updates via a cron job.
 All other PRs are created directly on release from the source repository.
