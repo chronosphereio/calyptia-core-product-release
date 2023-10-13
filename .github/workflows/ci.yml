@@ -2,7 +2,13 @@
 name: CI - test (and release)
 on:
   pull_request:
+    paths:
+      - 'component-config.json'
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   ci-get-metadata:

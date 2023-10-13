@@ -8,7 +8,8 @@
     "core_operator": "2.0.12",
     "configmap_reload": "0.11.1",
     "frontend": "1.2.0",
-    "lua_sandbox": "2.2.0"
+    "lua_sandbox": "2.2.0",
+    "lua_modules": "5.0.0"
   },
   "k8s_kind_versions": [
     "v1.27.3",
