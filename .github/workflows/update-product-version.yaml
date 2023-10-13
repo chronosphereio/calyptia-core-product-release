@@ -14,10 +14,16 @@ on:
             token:
                 required: true
                 description: The Github token to use for check out.
+        outputs:
+            pr:
+                value: ${{ jobs.version-update.outputs.pr || '' }}
+                description: The PR created, if any, or an empty string.
 jobs:
     version-update:
         name: Update ${{ inputs.product }} to ${{ inputs.version }}
         runs-on: ubuntu-latest
+        outputs:
+            pr: ${{ steps.cpr.outputs.pull-request-number || '' }}
         steps:
             - uses: actions/checkout@v4
               with:
