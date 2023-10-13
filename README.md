@@ -32,5 +32,5 @@ graph TD;
    SHC[Self hosted chart]-- PR on release -->Public chart;
 ```
 
-The CPR[Core Product Release] repository drives the self-hosted chart updates via a cron job.
+The Core Product Release repository drives the self-hosted chart updates via a cron job.
 All other PRs are created directly on release from the source repository.
