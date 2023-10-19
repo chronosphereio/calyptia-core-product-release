@@ -46,7 +46,7 @@ jobs:
                 else
                     echo "ERROR: Invalid semver string: $VERSION"
                 fi
-                export "version=$VERSION" >> $GITHUB_OUTPUT
+                echo "version=$VERSION" >> $GITHUB_OUTPUT
               shell: bash
 
     version-update:
