@@ -61,7 +61,9 @@ jobs:
               with:
                 token: ${{ secrets.token }}
                 repository: calyptia/core-product-release
-            - run: |
+
+            - name: Update versions
+              run: |
                 jq '.versions.${{ needs.version-checks.outputs.product }} = "${{ needs.version-checks.outputs.version }}"' ./component-config.json | tee ./component-config-new.json
                 mv -f ./component-config-new.json ./component-config.json
               shell: bash
@@ -73,7 +75,8 @@ jobs:
                 commit-message: 'ci: update to latest versions'
                 signoff: true
                 # Repeated calls will sit on top of each other to test as one until merged
-                branch: ci_update_versions_push
+                # Only updates per product
+                branch: ci_update_versions_push_${{ needs.version-checks.outputs.product }}
                 delete-branch: true
                 title: 'ci: update to latest Calyptia versions'
                 # We need workflows permission so have to use the CI_PAT
