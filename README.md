@@ -31,7 +31,15 @@ graph TD;
 
    CPR[Core Product Release]-- cron poll -->SHC[Self hosted chart];
    SHC[Self hosted chart]-- PR on commit -->PC[Public chart];
+
+   CPR[Core Product Release]-- tag -->CD[Core Docs];
 ```
 
 The Core Product Release repository drives the self-hosted chart updates via a cron job.
 All other PRs are created directly on release from the source repository.
+
+## Tagging
+
+This repository will be tagged with a specific Core Product overall release made up of the various versions for the individual components.
+A tag will then indicate a supported set of components as a particular overall product version.
+A tag will also drive Core Docs updates with a changelog and any other relevant details.
