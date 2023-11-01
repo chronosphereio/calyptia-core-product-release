@@ -17,6 +17,9 @@ graph TD;
    CFB[Core Fluent Bit]-- PR on release -->CO[Core Operator];
    CFB[Core Fluent Bit]-- PR on release -->CPR[Core Product Release];
 
+   CSIC[Core Sidecar Ingest Check]-- PR on release -->CO[Core Operator];
+   CSIC[Core Sidecar Ingest Check]-- PR on release -->CPR[Core Product Release];
+
    CO[Core Operator]-- PR on release -->COC[Core Operator chart];
    CO[Core Operator]-- PR on release -->CLI;
    CO[Core Operator]-- PR on release -->COR[Core Operator releases];
