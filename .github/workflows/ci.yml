@@ -20,6 +20,12 @@ jobs:
     # uses: calyptia/cloud-e2e/.github/workflows/call-integration-tests.yaml@main
     # Instead we have to replicate the same workflow locally
     uses: ./.github/workflows/call-integration-tests.yaml
+    strategy:
+      fail-fast: false
+      matrix:
+        testset:
+          - operator-install
+          - operator
     with:
       cli-version: v${{ needs.ci-get-metadata.outputs.cli-version }}
       cloud-image: ghcr.io/calyptia/cloud:${{ needs.ci-get-metadata.outputs.cloud-version }}
@@ -27,6 +33,7 @@ jobs:
       core-operator-image: ghcr.io/calyptia/core-operator:${{ needs.ci-get-metadata.outputs.core-operator-version }}
       core-operator-from-cloud-image: ghcr.io/calyptia/core-operator/sync-from-cloud:${{ needs.ci-get-metadata.outputs.core-operator-version }}
       core-operator-to-cloud-image: ghcr.io/calyptia/core-operator/sync-to-cloud:${{ needs.ci-get-metadata.outputs.core-operator-version }}
+      calyptia-tests: "${{ matrix.testset }}/"
     secrets:
       registry-username: ${{ secrets.CI_USERNAME }}
       registry-password: ${{ secrets.CI_PAT }}
