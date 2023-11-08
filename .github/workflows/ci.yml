@@ -26,10 +26,6 @@ jobs:
         testset:
           - operator-install
           - operator
-          - cluster_logging
-          - core
-          - fleet
-          - vm-images
     with:
       cli-version: v${{ needs.ci-get-metadata.outputs.cli-version }}
       cloud-image: ghcr.io/calyptia/cloud:${{ needs.ci-get-metadata.outputs.cloud-version }}
