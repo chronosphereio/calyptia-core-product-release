@@ -70,7 +70,7 @@
           description: The runner to use for tests.
           type: string
           required: false
-          default: actuated-arm64
+          default: actuated-4cpu-16gb
       secrets:
         registry-username:
           description: ci username to use for login into container registry
