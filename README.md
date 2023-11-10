@@ -32,14 +32,14 @@ graph TD;
    Frontend-- PR on release -->CPR[Core Product Release];
    CLS[Cloud LUA Sandbox]-- PR on release -->CPR[Core Product Release];
 
-   CPR[Core Product Release]-- cron poll -->SHC[Self hosted chart];
+   CPR[Core Product Release]-- PR on release -->SHC[Self hosted chart];
    SHC[Self hosted chart]-- PR on commit -->PC[Public chart];
 
    CPR[Core Product Release]-- tag -->CD[Core Docs];
 ```
 
-The Core Product Release repository drives the self-hosted chart updates via a cron job.
-All other PRs are created directly on release from the source repository.
+All target PRs are created directly on release from the source repository.
+The Core Product Release repository drives the self-hosted chart updates via a release from here, i.e. create a tag and then it will create a release that also updates the self-hosted updates.
 
 ## Tagging
 
