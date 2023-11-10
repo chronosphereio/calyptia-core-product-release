@@ -110,9 +110,9 @@ jobs:
         - name: Determine major version value from tag
           id: get-branch
           run: |
-            if [[ $TAG =~ ^v?[0-9]+\.[0-9]+.*$ ]]; then
-                echo "branch=${BASH_REMATCH[0]}"
-                echo "branch=${BASH_REMATCH[0]}" >> $GITHUB_OUTPUT
+            if [[ "$TAG" =~ ^v?([0-9]+\.[0-9]+).*$ ]]; then
+                echo "branch=${BASH_REMATCH[1]}"
+                echo "branch=${BASH_REMATCH[1]}" >> $GITHUB_OUTPUT
             else
                 echo "Invalid tag: $TAG"
                 exit 1
@@ -134,7 +134,7 @@ jobs:
             BRANCH: ${{ steps.get-branch.outputs.branch }}
 
         - name: Inject latest version
-          run: echo "${{ github.ref_name }}" >> ./latest-tag.txt
+          run: echo "${{ github.ref_name }}" > ./latest-tag.txt
 
         - name: Update any versions
           run: |
