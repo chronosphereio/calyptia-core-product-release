@@ -73,11 +73,11 @@
           default: actuated-4cpu-16gb
         k8s-distribution:
           description: The K8S distribution to use for tests.
-          type: choice
-          options:
-            - 'kind'
-            - 'openshift'
-          default: 'kind'
+          type: string
+          # options:
+          #   - 'kind'
+          #   - 'openshift'
+          default: kind
           required: false
       secrets:
         registry-username:
