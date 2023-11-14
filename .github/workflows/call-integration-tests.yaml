@@ -124,7 +124,6 @@
 
         - name: Check for empties
           run: |
-            [[ -z "$CALYPTIA_CLI_VERSION" ]] && echo "Invalid $CALYPTIA_CLI_VERSION" && exit 1
             [[ -z "$CALYPTIA_CLOUD_IMAGE" ]] && echo "Invalid $CALYPTIA_CLOUD_IMAGE" && exit 1
             [[ -z "$CALYPTIA_CORE_OPERATOR_IMAGE" ]] && echo "Invalid $CALYPTIA_CORE_OPERATOR_IMAGE" && exit 1
             [[ -z "$CALYPTIA_CORE_OPERATOR_FROM_CLOUD_IMAGE" ]] && echo "Invalid $CALYPTIA_CORE_OPERATOR_FROM_CLOUD_IMAGE" && exit 1
