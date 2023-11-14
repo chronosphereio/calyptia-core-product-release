@@ -71,6 +71,14 @@
           type: string
           required: false
           default: actuated-4cpu-16gb
+        k8s-distribution:
+          description: The K8S distribution to use for tests.
+          type: choice
+          options:
+            - 'kind'
+            - 'openshift'
+          default: 'kind'
+          required: false
       secrets:
         registry-username:
           description: ci username to use for login into container registry
@@ -90,8 +98,27 @@
         github-token:
           description: The Github token for checking out the code.
           required: false # TODO: switch over once done
+  env:
+    AWS_EC2_METADATA_DISABLED: true
+    FLUENTD_VERSION: ${{ inputs.fluentd-version }}
+    CALYPTIA_CLI_VERSION: ${{ inputs.cli-version }}
+    CALYPTIA_CLOUD_IMAGE: ${{ inputs.cloud-image }}
+    CALYPTIA_CORE_IMAGE: ${{ inputs.core-image }}
+    CALYPTIA_CORE_OPERATOR_IMAGE: ${{ inputs.core-operator-image }}
+    CALYPTIA_CORE_OPERATOR_FROM_CLOUD_IMAGE: ${{ inputs.core-operator-from-cloud-image }}
+    CALYPTIA_CORE_OPERATOR_TO_CLOUD_IMAGE: ${{ inputs.core-operator-to-cloud-image }}
+    CALYPTIA_CORE_OPERATOR_CRD: ${{ (inputs.core-operator-crd-manifest != '' && 'override/crd.yaml') || '' }}
+
   jobs:
-    run-integration-tests:
+    get-versions:
+      # permissions:
+      #   contents: read
+      uses: ./.github/workflows/get-versions.yaml
+
+    run-integration-tests-kind:
+      if: inputs.k8s-distribution == 'kind'
+      needs:
+        - get-versions
       # permissions:
       #   # Needed for the debug SSH connection to Actuated
       #   id-token: write
@@ -103,21 +130,8 @@
         matrix:
           # Be aware the KIND and K8S image versions may need to be compatible
           # https://github.com/kubernetes-sigs/kind/releases/tag/v0.20.0
-          k8s-release:
-            - 'v1.27.3'
-            - 'v1.25.11'
-            - 'v1.23.17'
+          k8s-release: ${{ fromJSON(needs.get-versions.outputs.k8s-test-versions) }}
       runs-on: ${{ inputs.runner || 'ubuntu-latest' }}
-      env:
-        AWS_EC2_METADATA_DISABLED: true
-        FLUENTD_VERSION: ${{ inputs.fluentd-version }}
-        CALYPTIA_CLI_VERSION: ${{ inputs.cli-version }}
-        CALYPTIA_CLOUD_IMAGE: ${{ inputs.cloud-image }}
-        CALYPTIA_CORE_IMAGE: ${{ inputs.core-image }}
-        CALYPTIA_CORE_OPERATOR_IMAGE: ${{ inputs.core-operator-image }}
-        CALYPTIA_CORE_OPERATOR_FROM_CLOUD_IMAGE: ${{ inputs.core-operator-from-cloud-image }}
-        CALYPTIA_CORE_OPERATOR_TO_CLOUD_IMAGE: ${{ inputs.core-operator-to-cloud-image }}
-        CALYPTIA_CORE_OPERATOR_CRD: ${{ (inputs.core-operator-crd-manifest != '' && 'override/crd.yaml') || '' }}
       steps:
         - name: Install dependencies
           run: |
@@ -293,4 +307,143 @@
               sort |\
               uniq -c
             echo '-------------------------------------------------------------------------------'
+          shell: bash
+
+    run-integration-tests-openshift:
+      if: inputs.k8s-distribution == 'openshift'
+      runs-on: ${{ inputs.runner }}
+      # permissions:
+      #   # Needed for the gcloud auth
+      #   id-token: write
+      #   contents: read
+      env:
+        VM_NAME: test
+        IMAGE: ${{ github.repository }}-${{ github.run_id }}-ocp
+      steps:
+        - name: Checkout the Code
+          uses: actions/checkout@v4
+          with:
+            repository: calyptia/cloud-e2e
+            ref: ${{ inputs.ref }}
+            token: ${{ secrets.github-token }}
+            path: cloud-e2e
+
+        - name: Verify selected tests exist
+          if: inputs.calyptia-tests != ''
+          run: |
+            if [[ -d "./bats/${{ inputs.calyptia-tests }}" ]]; then
+              echo "Found test set: ${{ inputs.calyptia-tests }}"
+            else
+              echo "Unable to find test set: ${{ inputs.calyptia-tests }}"
+              exit 1
+            fi
+          shell: bash
+
+        - name: Download crd manifest
+          if: inputs.core-operator-crd-manifest != ''
+          uses: actions/download-artifact@v3
+          with:
+            name: ${{ inputs.core-operator-crd-manifest }}
+            path: override
+
+        - id: 'auth'
+          uses: 'google-github-actions/auth@v1'
+          with:
+            credentials_json: '${{ secrets.google-access-key }}'
+
+        - name: 'Set up Cloud SDK'
+          uses: 'google-github-actions/setup-gcloud@v1'
+
+        - name: Set up defaults
+          run: |
+            gcloud config set compute/zone us-east1-c
+            gcloud info
+          shell: bash
+
+        - name: Wipe any exising VM
+          run: |
+            gcloud compute instances delete "$VM_NAME" -q || true
+          shell: bash
+
+        - name: Create VM
+          run: |
+            gcloud compute instances create "$VM_NAME" --image="$IMAGE"
+            sleep 10
+          shell: bash
+
+        - name: Wait for VM
+          run: |
+            echo "Waiting for SSH access to $VM_NAME..."
+            until gcloud compute ssh "$VM_NAME" -q --command="true" 2> /dev/null; do
+                echo -n '.'
+                sleep 5
+            done
+            echo
+            echo "Successfully connected to $VM_NAME"
+          shell: bash
+
+        - name: Rsync files to VM
+          run: |
+            gcloud compute scp --recurse ./cloud-e2e "$VM_NAME":~/cloud-e2e
+            [[ -d ./override ]] && gcloud compute scp --recurse ./override "$VM_NAME":~/override
+          shell: bash
+
+        - name: Start CRC
+          run: gcloud compute ssh "$VM_NAME" -q --command='/bin/bash -l /usr/local/bin/crc start'
+          shell: bash
+
+        - name: Set up environment
+          run: |
+            echo "export REGISTRY_SERVER=$REGISTRY_SERVER" > ./.env
+            echo "export REGISTRY_USERNAME=$REGISTRY_USERNAME" >> ./.env
+            echo "export REGISTRY_PASSWORD=$REGISTRY_PASSWORD" >> ./.env
+            echo "export FLUENTD_VERSION=$FLUENTD_VERSION" >> ./.env
+            echo "export CALYPTIA_CLI_VERSION=$CALYPTIA_CLI_VERSION" >> ./.env
+            echo "export CALYPTIA_CLOUD_IMAGE=$CALYPTIA_CLOUD_IMAGE" >> ./.env
+            echo "export CALYPTIA_CORE_IMAGE=$CALYPTIA_CORE_IMAGE" >> ./.env
+            echo "export CALYPTIA_CORE_OPERATOR_IMAGE=$CALYPTIA_CORE_OPERATOR_IMAGE" >> ./.env
+            echo "export CALYPTIA_CORE_OPERATOR_FROM_CLOUD_IMAGE=$CALYPTIA_CORE_OPERATOR_FROM_CLOUD_IMAGE" >> ./.env
+            echo "export CALYPTIA_CORE_OPERATOR_TO_CLOUD_IMAGE=$CALYPTIA_CORE_OPERATOR_TO_CLOUD_IMAGE" >> ./.env
+            echo "export CALYPTIA_CORE_OPERATOR_CRD=$CALYPTIA_CORE_OPERATOR_CRD" >> ./.env
+            cat ./.env
+            gcloud compute scp ./.env "$VM_NAME":~/.env
+            gcloud compute ssh "$VM_NAME" -q --command='/bin/bash -l source ~/.env && set'
+          shell: bash
+          env:
+            REGISTRY_SERVER: ghcr.io
+            REGISTRY_USERNAME: ${{ secrets.registry-username }}
+            REGISTRY_PASSWORD: ${{ secrets.registry-password }}
+            TEST_UID: ${{ github.repository }}-${{ github.run_id }}
+
+        - name: Run tests
+          run: |
+            gcloud compute ssh "$VM_NAME" -q --command='/bin/bash -l source ~/.env && ~/cloud-e2e/run-bats.sh ${{ inputs.calyptia-tests }}'
+          shell: bash
+
+          timeout-minutes: 30
+        - name: Dump pod logs
+          if: always()
+          continue-on-error: true
+          run: |
+            gcloud compute ssh "$VM_NAME" -q --command='/bin/bash -l ps afx'
+            echo '-------------------------------------------------------------------------------'
+            gcloud compute ssh "$VM_NAME" -q --command='/bin/bash -l kubectl cluster-info || true'
+            echo '-------------------------------------------------------------------------------'
+            gcloud compute ssh "$VM_NAME" -q --command='/bin/bash -l kubectl get ns || true'
+            echo '-------------------------------------------------------------------------------'
+            gcloud compute ssh "$VM_NAME" -q --command='/bin/bash -l kubectl get pods -A || true'
+            echo '-------------------------------------------------------------------------------'
+            gcloud compute ssh "$VM_NAME" -q --command='/bin/bash -l kubectl describe all -n test || true'
+            echo '-------------------------------------------------------------------------------'
+            gcloud compute ssh "$VM_NAME" -q --command='/bin/bash -l kubectl cluster-info dump --namespaces test || true'
+            echo '-------------------------------------------------------------------------------'
+          shell: bash
+
+        - name: Stop CRC
+          run: gcloud compute ssh "$VM_NAME" -q --command='/bin/bash -l /usr/local/bin/crc stop'
+          shell: bash
+
+        - name: Delete VM
+          if: always()
+          run: gcloud compute instances delete "$VM_NAME" -q || true
           shell: bash
