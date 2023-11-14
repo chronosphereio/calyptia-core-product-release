@@ -110,6 +110,27 @@
     CALYPTIA_CORE_OPERATOR_CRD: ${{ (inputs.core-operator-crd-manifest != '' && 'override/crd.yaml') || '' }}
 
   jobs:
+    verify-inputs:
+      name: Verify inputs
+      runs-on: ubuntu-latest
+      permissions: {}
+      steps:
+        - name: Invalid K8S distribution
+          if: ${{ inputs.k8s-distribution != 'kind' && inputs.k8s-distribution != 'openshift' }}
+          run: |
+            echo "Invalid K8S distribution: ${{ inputs.k8s-distribution }}"
+            exit 1
+          shell: bash
+
+        - name: Check for empties
+          run: |
+            [[ -z "$CALYPTIA_CLI_VERSION" ]] && echo "Invalid $CALYPTIA_CLI_VERSION" && exit 1
+            [[ -z "$CALYPTIA_CLOUD_IMAGE" ]] && echo "Invalid $CALYPTIA_CLOUD_IMAGE" && exit 1
+            [[ -z "$CALYPTIA_CORE_OPERATOR_IMAGE" ]] && echo "Invalid $CALYPTIA_CORE_OPERATOR_IMAGE" && exit 1
+            [[ -z "$CALYPTIA_CORE_OPERATOR_FROM_CLOUD_IMAGE" ]] && echo "Invalid $CALYPTIA_CORE_OPERATOR_FROM_CLOUD_IMAGE" && exit 1
+            [[ -z "$CALYPTIA_CORE_OPERATOR_TO_CLOUD_IMAGE" ]] && echo "Invalid $CALYPTIA_CORE_OPERATOR_TO_CLOUD_IMAGE" && exit 1
+          shell: bash
+
     get-versions:
       # permissions:
       #   contents: read
@@ -118,6 +139,7 @@
     run-integration-tests-kind:
       if: inputs.k8s-distribution == 'kind'
       needs:
+        - verify-inputs
         - get-versions
       # permissions:
       #   # Needed for the debug SSH connection to Actuated
@@ -312,6 +334,8 @@
     run-integration-tests-openshift:
       if: inputs.k8s-distribution == 'openshift'
       runs-on: ${{ inputs.runner }}
+      needs:
+        - verify-inputs
       # permissions:
       #   # Needed for the gcloud auth
       #   id-token: write
