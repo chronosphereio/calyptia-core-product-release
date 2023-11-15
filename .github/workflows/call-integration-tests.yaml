@@ -508,6 +508,13 @@
           env:
             VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
 
+        - name: Setup kubeconfig
+          run: |
+            gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='eval $(crc oc-env);oc login -u developer -p admin https://api.crc.testing:6443'
+          shell: bash
+          env:
+            VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
+
         - name: Run tests
           run: |
             gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='source ~/.env && ~/cloud-e2e/run-bats.sh ${{ inputs.calyptia-tests }}'
