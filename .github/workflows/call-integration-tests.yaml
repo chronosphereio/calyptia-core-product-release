@@ -472,7 +472,7 @@
             VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
 
         - name: Start CRC
-          run: gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='/bin/bash -l /usr/local/bin/crc start'
+          run: gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='crc start'
           shell: bash
           env:
             VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
@@ -492,7 +492,7 @@
             echo "export CALYPTIA_CORE_OPERATOR_CRD=$CALYPTIA_CORE_OPERATOR_CRD" >> ./.env
             cat ./.env
             gcloud compute scp ./.env "$IMAGE_USER"@"$VM_NAME":~/.env
-            gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='/bin/bash -l source ~/.env && set'
+            gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='source ~/.env && set'
           shell: bash
           env:
             REGISTRY_SERVER: ghcr.io
@@ -515,22 +515,22 @@
           run: |
             gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='ps afx'
             echo '-------------------------------------------------------------------------------'
-            gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='/bin/bash -l kubectl cluster-info || true'
+            gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='kubectl cluster-info || true'
             echo '-------------------------------------------------------------------------------'
-            gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='/bin/bash -l kubectl get ns || true'
+            gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='kubectl get ns || true'
             echo '-------------------------------------------------------------------------------'
-            gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='/bin/bash -l kubectl get pods -A || true'
+            gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='kubectl get pods -A || true'
             echo '-------------------------------------------------------------------------------'
-            gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='/bin/bash -l kubectl describe all -n test || true'
+            gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='kubectl describe all -n test || true'
             echo '-------------------------------------------------------------------------------'
-            gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='/bin/bash -l kubectl cluster-info dump --namespaces test || true'
+            gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='kubectl cluster-info dump --namespaces test || true'
             echo '-------------------------------------------------------------------------------'
           shell: bash
           env:
             VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
 
         - name: Stop CRC
-          run: gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='/bin/bash -l /usr/local/bin/crc stop'
+          run: gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='crc stop'
           shell: bash
           env:
             VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
