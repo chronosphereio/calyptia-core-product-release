@@ -425,7 +425,7 @@
             echo "VM_NAME=$VM_NAME" >> $GITHUB_OUTPUT
           shell: bash
           env:
-            INPUT: ${{ github.repository }}-${{ github.run_id }}-ocp
+            INPUT: ${{ github.repository }}-${{ github.run_id }}-${{ inputs.calyptia-tests }}-ocp
 
         - name: Wipe any exising VM
           run: |
