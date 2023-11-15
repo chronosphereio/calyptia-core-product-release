@@ -439,6 +439,8 @@
             gcloud compute instances create "$VM_NAME" --image-family="$IMAGE_FAMILY" --enable-nested-virtualization --machine-type='c2-standard-8'
             sleep 10
           shell: bash
+          env:
+            VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
 
         - name: Wait for VM
           run: |
