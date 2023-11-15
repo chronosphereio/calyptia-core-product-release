@@ -501,6 +501,13 @@
             TEST_UID: ${{ github.repository }}-${{ github.run_id }}
             VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
 
+        - name: Add missing dependencies
+          run: |
+            gcloud compute ssh "$VM_NAME" -q --command='sudo apt-get update && sudo apt-get install -y unzip'
+          shell: bash
+          env:
+            VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
+
         - name: Run tests
           run: |
             gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='source ~/.env && ~/cloud-e2e/run-bats.sh ${{ inputs.calyptia-tests }}'
