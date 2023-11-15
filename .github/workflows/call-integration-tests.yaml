@@ -371,7 +371,6 @@
       #   id-token: write
       #   contents: read
       env:
-        VM_NAME: ${{ github.repository }}-${{ github.run_id }}-ocp
         IMAGE_FAMILY: test-calyptia-openshift-crc
       steps:
         - name: Checkout the Code
@@ -414,10 +413,26 @@
             gcloud info
           shell: bash
 
+        - name: Sanitise VM name
+          # Needs to match: (?:[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?)
+          id: get-vm-name
+          run: |
+            VM_NAME=${INPUT/calyptia\//}
+            VM_NAME=${VM_NAME//\//-}
+            VM_NAME=${VM_NAME//_/-}
+            VM_NAME=${VM_NAME:0:61}
+            echo "VM_NAME=$VM_NAME"
+            echo "VM_NAME=$VM_NAME" >> $GITHUB_OUTPUTS
+          shell: bash
+          env:
+            INPUT: ${{ github.repository }}-${{ github.run_id }}-ocp
+
         - name: Wipe any exising VM
           run: |
             gcloud compute instances delete "$VM_NAME" -q || true
           shell: bash
+          env:
+            VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
 
         - name: Create VM
           run: |
@@ -435,16 +450,22 @@
             echo
             echo "Successfully connected to $VM_NAME"
           shell: bash
+          env:
+            VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
 
         - name: Rsync files to VM
           run: |
             gcloud compute scp --recurse ./cloud-e2e "$VM_NAME":~/cloud-e2e
             [[ -d ./override ]] && gcloud compute scp --recurse ./override "$VM_NAME":~/override
           shell: bash
+          env:
+            VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
 
         - name: Start CRC
           run: gcloud compute ssh "$VM_NAME" -q --command='/bin/bash -l /usr/local/bin/crc start'
           shell: bash
+          env:
+            VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
 
         - name: Set up environment
           run: |
@@ -468,11 +489,14 @@
             REGISTRY_USERNAME: ${{ secrets.registry-username }}
             REGISTRY_PASSWORD: ${{ secrets.registry-password }}
             TEST_UID: ${{ github.repository }}-${{ github.run_id }}
+            VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
 
         - name: Run tests
           run: |
             gcloud compute ssh "$VM_NAME" -q --command='/bin/bash -l source ~/.env && ~/cloud-e2e/run-bats.sh ${{ inputs.calyptia-tests }}'
           shell: bash
+          env:
+            VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
 
           timeout-minutes: 30
         - name: Dump pod logs
@@ -492,12 +516,18 @@
             gcloud compute ssh "$VM_NAME" -q --command='/bin/bash -l kubectl cluster-info dump --namespaces test || true'
             echo '-------------------------------------------------------------------------------'
           shell: bash
+          env:
+            VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
 
         - name: Stop CRC
           run: gcloud compute ssh "$VM_NAME" -q --command='/bin/bash -l /usr/local/bin/crc stop'
           shell: bash
+          env:
+            VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
 
         - name: Delete VM
           if: always()
           run: gcloud compute instances delete "$VM_NAME" -q || true
           shell: bash
+          env:
+            VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
