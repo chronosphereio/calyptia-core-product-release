@@ -503,7 +503,7 @@
 
         - name: Run tests
           run: |
-            gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='/bin/bash -l source ~/.env && ~/cloud-e2e/run-bats.sh ${{ inputs.calyptia-tests }}'
+            gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='source ~/.env && ~/cloud-e2e/run-bats.sh ${{ inputs.calyptia-tests }}'
           shell: bash
           env:
             VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
