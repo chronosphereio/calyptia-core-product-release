@@ -385,7 +385,7 @@
         - name: Verify selected tests exist
           if: inputs.calyptia-tests != ''
           run: |
-            if [[ -d "./bats/${{ inputs.calyptia-tests }}" ]]; then
+            if [[ -d "./cloud-e2e/bats/${{ inputs.calyptia-tests }}" ]]; then
               echo "Found test set: ${{ inputs.calyptia-tests }}"
             else
               echo "Unable to find test set: ${{ inputs.calyptia-tests }}"
