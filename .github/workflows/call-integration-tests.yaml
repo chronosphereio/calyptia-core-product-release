@@ -122,12 +122,43 @@
             exit 1
           shell: bash
 
-        - name: Check for empties
+        - name: Check for empty CALYPTIA_CLI_VERSION
+          if: inputs.cli-version == ''
           run: |
-            [[ -z "$CALYPTIA_CLOUD_IMAGE" ]] && echo "Invalid $CALYPTIA_CLOUD_IMAGE" && exit 1
-            [[ -z "$CALYPTIA_CORE_OPERATOR_IMAGE" ]] && echo "Invalid $CALYPTIA_CORE_OPERATOR_IMAGE" && exit 1
-            [[ -z "$CALYPTIA_CORE_OPERATOR_FROM_CLOUD_IMAGE" ]] && echo "Invalid $CALYPTIA_CORE_OPERATOR_FROM_CLOUD_IMAGE" && exit 1
-            [[ -z "$CALYPTIA_CORE_OPERATOR_TO_CLOUD_IMAGE" ]] && echo "Invalid $CALYPTIA_CORE_OPERATOR_TO_CLOUD_IMAGE" && exit 1
+            echo "Invalid CALYPTIA_CLI_VERSION"
+            exit 1
+          shell: bash
+
+        - name: Check for empty CALYPTIA_CLOUD_IMAGE
+          if: inputs.cloud-image == ''
+          run: |
+            echo "Invalid CALYPTIA_CLOUD_IMAGE"
+            exit 1
+          shell: bash
+
+        - name: Check for empty CALYPTIA_CORE_OPERATOR_IMAGE
+          if: inputs.core-operator-image == ''
+          run: |
+            echo "Invalid CALYPTIA_CORE_OPERATOR_IMAGE"
+            exit 1
+          shell: bash
+
+        - name: Check for empty CALYPTIA_CORE_OPERATOR_FROM_CLOUD_IMAGE
+          if: inputs.core-operator-from-cloud-image == ''
+          run: |
+            echo "Invalid CALYPTIA_CORE_OPERATOR_FROM_CLOUD_IMAGE"
+            exit 1
+          shell: bash
+
+        - name: Check for empty CALYPTIA_CORE_OPERATOR_TO_CLOUD_IMAGE
+          if: inputs.core-operator-to-cloud-image == ''
+          run: |
+            echo "Invalid CALYPTIA_CORE_OPERATOR_TO_CLOUD_IMAGE"
+            exit 1
+          shell: bash
+
+        - name: Success
+          run: echo "Checks complete"
           shell: bash
 
     get-versions:
@@ -340,8 +371,8 @@
       #   id-token: write
       #   contents: read
       env:
-        VM_NAME: test
-        IMAGE: ${{ github.repository }}-${{ github.run_id }}-ocp
+        VM_NAME: ${{ github.repository }}-${{ github.run_id }}-ocp
+        IMAGE_FAMILY: test-calyptia-openshift-crc
       steps:
         - name: Checkout the Code
           uses: actions/checkout@v4
@@ -390,7 +421,7 @@
 
         - name: Create VM
           run: |
-            gcloud compute instances create "$VM_NAME" --image="$IMAGE"
+            gcloud compute instances create "$VM_NAME" --image-family="$IMAGE_FAMILY" --enable-nested-virtualization --machine-type='c2-standard-8'
             sleep 10
           shell: bash
 
