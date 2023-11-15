@@ -458,7 +458,14 @@
         - name: Rsync files to VM
           run: |
             gcloud compute scp --recurse ./cloud-e2e "$VM_NAME":~/cloud-e2e
-            [[ -d ./override ]] && gcloud compute scp --recurse ./override "$VM_NAME":~/override
+          shell: bash
+          env:
+            VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
+
+        - name: Copy manifest override
+          if: inputs.core-operator-crd-manifest != ''
+          run: |
+            gcloud compute scp --recurse ./override "$VM_NAME":~/override
           shell: bash
           env:
             VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
@@ -505,7 +512,7 @@
           if: always()
           continue-on-error: true
           run: |
-            gcloud compute ssh "$VM_NAME" -q --command='/bin/bash -l ps afx'
+            gcloud compute ssh "$VM_NAME" -q --command='ps afx'
             echo '-------------------------------------------------------------------------------'
             gcloud compute ssh "$VM_NAME" -q --command='/bin/bash -l kubectl cluster-info || true'
             echo '-------------------------------------------------------------------------------'
