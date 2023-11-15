@@ -372,6 +372,7 @@
       #   contents: read
       env:
         IMAGE_FAMILY: test-calyptia-openshift-crc
+        IMAGE_USER: ubuntu
       steps:
         - name: Checkout the Code
           uses: actions/checkout@v4
@@ -436,7 +437,7 @@
 
         - name: Create VM
           run: |
-            gcloud compute instances create "$VM_NAME" --image-family="$IMAGE_FAMILY" --enable-nested-virtualization --machine-type='c2-standard-8'
+            gcloud compute instances create "$VM_NAME" --image-family="$IMAGE_FAMILY" --enable-nested-virtualization --machine-type='c2-standard-8' --image-project=calyptia-infra --verbosity=debug
             sleep 10
           shell: bash
           env:
@@ -445,7 +446,7 @@
         - name: Wait for VM
           run: |
             echo "Waiting for SSH access to $VM_NAME..."
-            until gcloud compute ssh "$VM_NAME" -q --command="true" 2> /dev/null; do
+            until gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command="true" 2> /dev/null; do
                 echo -n '.'
                 sleep 5
             done
@@ -457,7 +458,7 @@
 
         - name: Rsync files to VM
           run: |
-            gcloud compute scp --recurse ./cloud-e2e "$VM_NAME":~/cloud-e2e
+            gcloud compute scp --recurse ./cloud-e2e "$IMAGE_USER"@"$VM_NAME":~/cloud-e2e
           shell: bash
           env:
             VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
@@ -465,13 +466,13 @@
         - name: Copy manifest override
           if: inputs.core-operator-crd-manifest != ''
           run: |
-            gcloud compute scp --recurse ./override "$VM_NAME":~/override
+            gcloud compute scp --recurse ./override "$IMAGE_USER"@"$VM_NAME":~/override
           shell: bash
           env:
             VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
 
         - name: Start CRC
-          run: gcloud compute ssh "$VM_NAME" -q --command='/bin/bash -l /usr/local/bin/crc start'
+          run: gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='/bin/bash -l /usr/local/bin/crc start'
           shell: bash
           env:
             VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
@@ -490,8 +491,8 @@
             echo "export CALYPTIA_CORE_OPERATOR_TO_CLOUD_IMAGE=$CALYPTIA_CORE_OPERATOR_TO_CLOUD_IMAGE" >> ./.env
             echo "export CALYPTIA_CORE_OPERATOR_CRD=$CALYPTIA_CORE_OPERATOR_CRD" >> ./.env
             cat ./.env
-            gcloud compute scp ./.env "$VM_NAME":~/.env
-            gcloud compute ssh "$VM_NAME" -q --command='/bin/bash -l source ~/.env && set'
+            gcloud compute scp ./.env "$IMAGE_USER"@"$VM_NAME":~/.env
+            gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='/bin/bash -l source ~/.env && set'
           shell: bash
           env:
             REGISTRY_SERVER: ghcr.io
@@ -502,7 +503,7 @@
 
         - name: Run tests
           run: |
-            gcloud compute ssh "$VM_NAME" -q --command='/bin/bash -l source ~/.env && ~/cloud-e2e/run-bats.sh ${{ inputs.calyptia-tests }}'
+            gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='/bin/bash -l source ~/.env && ~/cloud-e2e/run-bats.sh ${{ inputs.calyptia-tests }}'
           shell: bash
           env:
             VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
@@ -512,24 +513,24 @@
           if: always()
           continue-on-error: true
           run: |
-            gcloud compute ssh "$VM_NAME" -q --command='ps afx'
+            gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='ps afx'
             echo '-------------------------------------------------------------------------------'
-            gcloud compute ssh "$VM_NAME" -q --command='/bin/bash -l kubectl cluster-info || true'
+            gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='/bin/bash -l kubectl cluster-info || true'
             echo '-------------------------------------------------------------------------------'
-            gcloud compute ssh "$VM_NAME" -q --command='/bin/bash -l kubectl get ns || true'
+            gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='/bin/bash -l kubectl get ns || true'
             echo '-------------------------------------------------------------------------------'
-            gcloud compute ssh "$VM_NAME" -q --command='/bin/bash -l kubectl get pods -A || true'
+            gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='/bin/bash -l kubectl get pods -A || true'
             echo '-------------------------------------------------------------------------------'
-            gcloud compute ssh "$VM_NAME" -q --command='/bin/bash -l kubectl describe all -n test || true'
+            gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='/bin/bash -l kubectl describe all -n test || true'
             echo '-------------------------------------------------------------------------------'
-            gcloud compute ssh "$VM_NAME" -q --command='/bin/bash -l kubectl cluster-info dump --namespaces test || true'
+            gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='/bin/bash -l kubectl cluster-info dump --namespaces test || true'
             echo '-------------------------------------------------------------------------------'
           shell: bash
           env:
             VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
 
         - name: Stop CRC
-          run: gcloud compute ssh "$VM_NAME" -q --command='/bin/bash -l /usr/local/bin/crc stop'
+          run: gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='/bin/bash -l /usr/local/bin/crc stop'
           shell: bash
           env:
             VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
