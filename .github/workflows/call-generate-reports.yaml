@@ -1,0 +1,66 @@
+---
+    name: Reusable workflow for generating reports
+    on:
+        workflow_call:
+            inputs:
+                ref:
+                    description: The commit, tag or branch of this repository to checkout
+                    type: string
+                    required: false
+                    default: refs/heads/main
+            secrets:
+                registry-username:
+                    description: ci username to use for login into container registry
+                    required: true
+                registry-password:
+                    description: ci password to use for login into container registry
+                    required: true
+                github-token:
+                    description: The Github token for checking out the code.
+                    required: true
+            outputs:
+                artefact-name:
+                    description: The name of the uploaded artefact with the reports in.
+                    value: reports
+    jobs:
+        ci-generate-reports:
+            name: Generate SBOM and CVE reports
+            permissions:
+                contents: read
+                packages: read
+            runs-on: ubuntu-latest
+            steps:
+                - name: Add dependencies
+                  run: |
+                    sudo apt-get update
+                    sudo apt-get install -y jq
+                  shell: bash
+
+                - name: Checkout
+                  uses: actions/checkout@v4
+                  with:
+                    ref: ${{ inputs.ref }}
+
+                - name: Login to GitHub Container Registry
+                  uses: docker/login-action@v3
+                  with:
+                    registry: ghcr.io
+                    username: ${{ secrets.registry-username }}
+                    password: ${{ secrets.registry-password }}
+
+                - name: Generate reports
+                  run: ./scripts/generate-reports.sh
+                  shell: bash
+                  env:
+                    OUTPUT_DIR: reports
+
+                - uses: actions/upload-artifact@v3
+                  with:
+                    name: reports
+                    path: |
+                        component-config.json
+                        ./scripts/generate-reports.sh
+                        reports/
+                        *-reports.*
+                    if-no-files-found: error
+                    retention-days: 5

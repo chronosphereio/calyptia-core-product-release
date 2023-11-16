@@ -42,6 +42,7 @@ jobs:
       github-token: ${{ secrets.CI_PAT }}
 
   ci-e2e-tests-openshift:
+    if: contains(github.event.pull_request.labels.*.name, 'openshift-build')
     needs:
       - ci-get-metadata
     # We cannot run this from a public repo as the cloud-e2e repo is private so even though it shares workflows with the Calyptia org,
@@ -69,4 +70,14 @@ jobs:
       registry-password: ${{ secrets.CI_PAT }}
       # Replace with playground key after: https://app.asana.com/0/1205042382663691/1205231066738712/f
       google-access-key: ${{ secrets.GCP_SA_KEY }}
+      github-token: ${{ secrets.CI_PAT }}
+
+  ci-generate-reports:
+    name: Generate SBOM and CVE reports for release
+    uses: ./.github/workflows/call-generate-reports.yaml
+    with:
+      ref: ${{ github.ref }}
+    secrets:
+      registry-username: ${{ secrets.CI_USERNAME }}
+      registry-password: ${{ secrets.CI_PAT }}
       github-token: ${{ secrets.CI_PAT }}
