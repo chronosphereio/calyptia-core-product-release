@@ -6,14 +6,15 @@ OUTPUT_DIR=${OUTPUT_DIR:-$(mktemp -d)}
 TAR_NAME=${TAR_NAME:-/tmp/calyptia-sboms.tgz}
 ZIP_NAME=${ZIP_NAME:-/tmp/calyptia-sboms.zip}
 
-if ! command -v docker &> /dev/null; then
-    echo "ERROR: missing docker command, please install"
-    exit 1
+if ! command -v syft &> /dev/null; then
+    echo "Installing syft"
+    curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sudo sh -s -- -b /usr/local/bin
 fi
 
-docker --version
-docker sbom --version
-docker scan --version
+if ! command -v grype &> /dev/null; then
+    echo "Installing grype"
+    curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sudo sh -s -- -b /usr/local/bin
+fi
 
 if ! command -v jq &> /dev/null; then
     echo "ERROR: missing jq command, please install"
@@ -45,9 +46,9 @@ do
   output_file=${image//\//-}
   output_file=${output_file//:/-}
   echo "Generating sbom for $image to $OUTPUT_DIR/$output_file"
-  docker sbom "$image" --format spdx-json > "$OUTPUT_DIR"/"$output_file.spdx.json"
-  docker sbom "$image" --format cyclonedx-json > "$OUTPUT_DIR"/"$output_file.cyclonedx.json"
-  docker scan "$image" --json --group-issues > "$OUTPUT_DIR"/"$output_file.scan.json"
+  syft docker:"$image" --output syft-json="$OUTPUT_DIR"/"$output_file.syft.json",spdx-json="$OUTPUT_DIR"/"$output_file.spdx.json",cyclonedx-json="$OUTPUT_DIR"/"$output_file.cyclonedx.json"
+  grype docker:"$image" --by-cve --output json > "$OUTPUT_DIR"/"$output_file.cves.json"
+  grype docker:"$image" --by-cve --output cyclonedx-json > "$OUTPUT_DIR"/"$output_file.cves.cyclonedx.json"
 done
 
 tar -czf "$TAR_NAME" -C "$OUTPUT_DIR" .
