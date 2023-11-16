@@ -30,11 +30,3 @@ jobs:
       - uses: actions/checkout@v4
       - name: Run markdownlint
         uses: actionshub/markdownlint@v3.1.4
-
-  verify-kind-versions-pr:
-    runs-on: ubuntu-latest
-    name: PR - check matching KIND versions
-    steps:
-      - uses: actions/checkout@v4
-      - run: ./scripts/check-kind-versions.sh
-        shell: bash
