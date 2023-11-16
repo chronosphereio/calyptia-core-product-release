@@ -124,6 +124,8 @@ jobs:
         runs-on: ubuntu-latest
         permissions:
             contents: none
+        needs:
+          - ci-generate-reports
         steps:
         - name: Determine major version value from tag
           id: get-branch

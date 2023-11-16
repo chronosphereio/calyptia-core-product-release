@@ -40,8 +40,8 @@ do
   output_file=${image//\//-}
   output_file=${output_file//:/-}
   echo "Generating sbom for $image to $OUTPUT_DIR/$output_file"
-  docker sbom "$image" --output "$OUTPUT_DIR"/"$output_file.spdx.json" --format spdx-json
-  docker sbom "$image" --output "$OUTPUT_DIR"/"$output_file.cyclonedx.json" --format cyclonedx-json
+  docker sbom "$image" --format spdx-json > "$OUTPUT_DIR"/"$output_file.spdx.json"
+  docker sbom "$image" --format cyclonedx-json > "$OUTPUT_DIR"/"$output_file.cyclonedx.json"
   docker scan "$image" --json --group-issues > "$OUTPUT_DIR"/"$output_file.scan.json"
 done
 
