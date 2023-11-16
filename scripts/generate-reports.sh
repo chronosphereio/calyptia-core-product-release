@@ -46,9 +46,9 @@ do
   output_file=${image//\//-}
   output_file=${output_file//:/-}
   echo "Generating sbom for $image to $OUTPUT_DIR/$output_file"
-  syft docker:"$image" --output syft-json="$OUTPUT_DIR"/"$output_file.syft.json",spdx-json="$OUTPUT_DIR"/"$output_file.spdx.json",cyclonedx-json="$OUTPUT_DIR"/"$output_file.cyclonedx.json"
-  grype docker:"$image" --by-cve --output json > "$OUTPUT_DIR"/"$output_file.cves.json"
-  grype docker:"$image" --by-cve --output cyclonedx-json > "$OUTPUT_DIR"/"$output_file.cves.cyclonedx.json"
+  syft docker:"$image" --output "syft-json=${OUTPUT_DIR}/${output_file}.syft.json,spdx-json=${OUTPUT_DIR}/${output_file}.spdx.json,cyclonedx-json=${OUTPUT_DIR}/${output_file}.cyclonedx.json"
+  grype docker:"$image" --by-cve --output json > "${OUTPUT_DIR}"/"${output_file}.cves.json"
+  grype docker:"$image" --by-cve --output cyclonedx-json > "${OUTPUT_DIR}"/"${output_file}.cves.cyclonedx.json"
 done
 
 tar -czf "$TAR_NAME" -C "$OUTPUT_DIR" .

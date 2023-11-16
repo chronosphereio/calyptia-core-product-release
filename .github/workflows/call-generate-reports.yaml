@@ -53,8 +53,6 @@
                   shell: bash
                   env:
                     OUTPUT_DIR: reports
-                    TAR_NAME: ${{ github.ref_name }}-reports.tar.gz
-                    ZIP_NAME: ${{ github.ref_name }}-reports.zip
 
                 - uses: actions/upload-artifact@v3
                   with:
