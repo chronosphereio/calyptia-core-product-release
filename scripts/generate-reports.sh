@@ -10,6 +10,11 @@ if ! command -v docker &> /dev/null; then
     echo "ERROR: missing docker command, please install"
     exit 1
 fi
+
+docker --version
+docker sbom --version
+docker scan --version
+
 if ! command -v jq &> /dev/null; then
     echo "ERROR: missing jq command, please install"
     exit 1
