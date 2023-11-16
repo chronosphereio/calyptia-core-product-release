@@ -52,8 +52,7 @@ jobs:
                 - LUA Sandbox: ${{ needs.ci-get-metadata.outputs.lua-sandbox-version }}
             fail_on_unmatched_files: false
             files: |
-                *.json
-                reports/*.json
+                **/*.json
             generate_release_notes: false
 
     ci-update-self-hosted:
@@ -160,7 +159,7 @@ jobs:
           uses: actions/download-artifact@v3
           with:
             name: ${{ needs.ci-generate-reports.outputs.artefact-name }}
-            path: reports/
+            path: /tmp/
 
         - name: Update any versions
           run: |
@@ -173,7 +172,7 @@ jobs:
           shell: bash
           env:
             NEW_VERSION: ${{ github.ref_name }}
-            REPORTS_DIR: reports
+            REPORTS_DIR: /tmp/reports
 
         - name: Generate PR
           id: cpr
