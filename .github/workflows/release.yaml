@@ -10,16 +10,33 @@ jobs:
         with:
             ref: ${{ github.ref }}
 
+    ci-generate-reports:
+      name: Generate SBOM and CVE reports for release
+      uses: ./.github/workflows/call-generate-reports.yaml
+      with:
+          ref: ${{ github.ref }}
+      secrets:
+        registry-username: ${{ secrets.CI_USERNAME }}
+        registry-password: ${{ secrets.CI_PAT }}
+        github-token: ${{ secrets.CI_PAT }}
+
     ci-release:
         name: Create official release
         runs-on: ubuntu-latest
         needs:
             - ci-get-metadata
+            - ci-generate-reports
         permissions:
             contents: write
         steps:
         - name: Checkout
           uses: actions/checkout@v4
+
+        - name: Download reports
+          uses: actions/download-artifact@v3
+          with:
+            name: ${{ needs.ci-generate-reports.outputs.artefact-name }}
+            path: reports/
 
         - name: Create release for tag
           uses: softprops/action-gh-release@v1
@@ -36,6 +53,7 @@ jobs:
             fail_on_unmatched_files: false
             files: |
                 *.json
+                reports/*.json
             generate_release_notes: false
 
     ci-update-self-hosted:
@@ -136,15 +154,24 @@ jobs:
         - name: Inject latest version
           run: echo "${{ github.ref_name }}" > ./latest-tag.txt
 
+        - name: Download reports
+          uses: actions/download-artifact@v3
+          with:
+            name: ${{ needs.ci-generate-reports.outputs.artefact-name }}
+            path: reports/
+
         - name: Update any versions
           run: |
             if [[ -x ./scripts/update-version.sh ]]; then
-                echo "Updating versions to "
-                ./scripts/update-version.sh
+                echo "Updating versions to $NEW_VERSION"
+                ./scripts/update-version.sh "$NEW_VERSION"
             else
                 echo "Skipping as no executable ./scripts/update-version.sh found"
             fi
           shell: bash
+          env:
+            NEW_VERSION: ${{ github.ref_name }}
+            REPORTS_DIR: reports
 
         - name: Generate PR
           id: cpr

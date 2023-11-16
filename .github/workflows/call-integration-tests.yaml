@@ -167,7 +167,7 @@
       uses: ./.github/workflows/get-versions.yaml
 
     run-integration-tests-kind:
-      if: inputs.k8s-distribution == 'kind'
+      if: inputs.k8s-distribution == 'kind' && !(contains(inputs.runner, 'mac') || contains(inputs.runner, 'windows'))
       needs:
         - verify-inputs
         - get-versions
@@ -362,7 +362,7 @@
           shell: bash
 
     run-integration-tests-openshift:
-      if: inputs.k8s-distribution == 'openshift'
+      if: inputs.k8s-distribution == 'openshift' && !(contains(inputs.runner, 'mac') || contains(inputs.runner, 'windows'))
       runs-on: ${{ inputs.runner }}
       needs:
         - verify-inputs
@@ -555,3 +555,27 @@
           shell: bash
           env:
             VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
+
+    run-integration-tests-windows:
+      if: contains(inputs.runner, 'windows')
+      runs-on: ${{ inputs.runner }}
+      needs:
+        - verify-inputs
+        - get-versions
+      steps:
+        - name: Placeholder
+          run: echo 'TBD'
+
+    run-integration-tests-macos:
+      # Covers both standard Github and Cirruslabs
+      # runner: macos-latest <- intel
+      # runner: ghcr.io/cirruslabs/macos-ventura-xcode:14 <- apple
+      if: contains(inputs.runner, 'macos')
+      runs-on: ${{ inputs.runner }}
+      needs:
+        - verify-inputs
+        - get-versions
+      steps:
+        - name: Placeholder
+          run: echo 'TBD'
+
