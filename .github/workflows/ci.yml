@@ -42,6 +42,7 @@ jobs:
       github-token: ${{ secrets.CI_PAT }}
 
   ci-e2e-tests-openshift:
+    if: contains(github.event.pull_request.labels.*.name, 'openshift-build')
     needs:
       - ci-get-metadata
     # We cannot run this from a public repo as the cloud-e2e repo is private so even though it shares workflows with the Calyptia org,
