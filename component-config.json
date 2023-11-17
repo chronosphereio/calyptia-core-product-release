@@ -1,6 +1,6 @@
 {
   "versions": {
-    "cli": "1.10.0",
+    "cli": "1.10.2",
     "cloud": "1.6.5",
     "cloud_e2e": "1.6.0",
     "core_fluent_bit": "23.11.1",
@@ -8,7 +8,7 @@
     "core_operator": "2.0.20",
     "configmap_reload": "0.11.1",
     "core_sidecar_ingest_check": "0.0.7",
-    "frontend": "1.4.3",
+    "frontend": "1.5.0",
     "lua_sandbox": "2.2.0",
     "lua_modules": "5.0.1"
   },
