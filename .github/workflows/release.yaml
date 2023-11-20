@@ -51,8 +51,10 @@ jobs:
                 - Frontend: ${{ needs.ci-get-metadata.outputs.frontend-version }}
                 - LUA Sandbox: ${{ needs.ci-get-metadata.outputs.lua-sandbox-version }}
             fail_on_unmatched_files: false
+            # Using **/*.json gives duplicate uploads for component-config.json so fails on the second one as already exists
             files: |
-                **/*.json
+                *.json
+                reports/*.json
             generate_release_notes: false
 
     ci-update-self-hosted:
@@ -163,6 +165,8 @@ jobs:
 
         - name: Update any versions
           run: |
+            cp -fv component-config.json "$REPORTS_DIR"/
+            ls -lR "$REPORTS_DIR"/
             if [[ -x ./scripts/update-version.sh ]]; then
                 echo "Updating versions to $NEW_VERSION"
                 ./scripts/update-version.sh "$NEW_VERSION"
@@ -170,6 +174,7 @@ jobs:
                 echo "Skipping as no executable ./scripts/update-version.sh found"
             fi
           shell: bash
+          continue-on-error: true
           env:
             NEW_VERSION: ${{ github.ref_name }}
             REPORTS_DIR: /tmp/reports
