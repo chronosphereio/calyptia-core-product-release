@@ -3,7 +3,7 @@
     "cli": "1.10.3",
     "cloud": "1.6.8",
     "cloud_e2e": "1.6.5",
-    "core_fluent_bit": "23.11.2",
+    "core_fluent_bit": "23.11.3",
     "core": "1.4.0",
     "core_operator": "2.0.21",
     "configmap_reload": "0.11.1",
