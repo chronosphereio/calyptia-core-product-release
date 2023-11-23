@@ -11,8 +11,6 @@ concurrency:
 jobs:
   ci-get-metadata:
     uses: ./.github/workflows/get-versions.yaml
-    secrets:
-      github-token: ${{ secrets.CI_PAT }}
 
   ci-e2e-tests:
     needs:
