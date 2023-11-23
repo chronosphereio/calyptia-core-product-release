@@ -110,7 +110,7 @@
             )
             export PATH="${PATH}":${{ steps.calyptia-cli.outputs.path }}
             sleep 3
-            cat mock.log
+            cat fleet-mock-api/mock.log
             ./run-bats.sh ${{ inputs.calyptia-tests }}
             kill -9 "$(cat MOCK.PID)"
           shell: bash
@@ -196,7 +196,7 @@
             )
             export PATH="${PATH}":${{ steps.calyptia-cli.outputs.path }}
             sleep 3
-            cat mock.log
+            cat fleet-mock-api/mock.log
             ./run-bats.sh ${{ inputs.calyptia-tests }}
             kill -9 "$(cat MOCK.PID)"
           # shell: bash
