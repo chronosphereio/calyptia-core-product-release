@@ -48,19 +48,10 @@
           run: echo "Checks complete"
           shell: bash
 
-    setup-bats:
-      runs-on: ${{ inputs.runner }}
-      steps:
-        - name: Setup BATS
-          uses: mig4/setup-bats@v1
-          with:
-            bats-version: 1.10.0
-
     run-integration-tests-windows:
       if: contains(inputs.runner, 'windows')
       runs-on: ${{ inputs.runner }}
       needs:
-        - setup-bats
         - verify-inputs
       steps:
         # missing: lsof, parallel, bc
@@ -68,6 +59,10 @@
           run: |
             choco install netcat httpie
           shell: bash
+        - name: Install Bats
+          uses: mig4/setup-bats@v1
+          with:
+            bats-version: 1.10.0
         - name: Download and Install Calyptia Fluent-Bit LTS Package
           id: pkginstall
           shell: bash
@@ -113,6 +108,9 @@
               go run main.go > /dev/null &
               echo $! > ../MOCK.PID
             )
+            ls -alF "${BATS_BIN_PATH}"
+            file "${BATS_BIN_PATH}/bats"
+            echo "PATH=${PATH}"
             export PATH="${PATH}":${{ steps.calyptia-cli.outputs.path }}
             ./run-bats.sh ${{ inputs.calyptia-tests }}
             kill -9 "$(cat MOCK.PID)"
@@ -126,7 +124,6 @@
       if: contains(inputs.runner, 'macos')
       runs-on: ${{ inputs.runner }}
       needs:
-        - setup-bats
         - verify-inputs
       steps:
         - name: Install dependencies
@@ -135,6 +132,10 @@
             # brew update
             brew install netcat lsof parallel httpie bc coreutils
           shell: bash
+        - name: Install Bats
+          uses: mig4/setup-bats@v1
+          with:
+            bats-version: 1.10.0
         - name: Set Architecture Package according to runner
           id: pkgarch
           run: |
