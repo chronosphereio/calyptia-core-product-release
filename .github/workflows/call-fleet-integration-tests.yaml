@@ -88,7 +88,7 @@
             URL="${URL}/cli_${{ inputs.calyptia-cli-version }}_windows_amd64.tar.gz"
             curl "${URL}" --output /tmp/calyptia-cli.tar.gz
             mkdir -p /tmp/calyptia-cli/
-            tar zxvf -C /tmp/calyptia-cli/
+            tar zxvf /tmp/calyptia-cli.tar.gz -C /tmp/calyptia-cli/
             echo "path=/tmp/calyptia-cli" >> "${GITHUB_OUTPUT}"
         - name: Checkout the Code
           uses: actions/checkout@v4
@@ -167,7 +167,7 @@
             URL="${URL}_${{ steps.pkgarch.outputs.arch }}.tar.gz"
             curl "${URL}" --output /tmp/calyptia-cli.tar.gz
             mkdir -p /tmp/calyptia-cli/
-            tar zxvf -C /tmp/calyptia-cli/
+            tar zxvf /tmp/calyptia-cli.tar.gz -C /tmp/calyptia-cli/
             echo "path=/tmp/calyptia-cli" >> "${GITHUB_OUTPUT}"
         - name: Checkout the Code
           uses: actions/checkout@v4
