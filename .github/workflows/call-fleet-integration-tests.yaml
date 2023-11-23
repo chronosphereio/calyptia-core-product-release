@@ -105,13 +105,12 @@
             export CALYPTIA_CLOUD_URL=http://127.0.0.1:8080
             export CALYPTIA_CLOUD_TOKEN=eyJQcm9qZWN0SUQiOiJmb29iYXIifQ.faketoken
             (cd fleet-mock-api;
-              go run main.go > /dev/null &
+              go run main.go > mock.log &
               echo $! > ../MOCK.PID
             )
-            ls -alF "${BATS_BIN_PATH}"
-            file "${BATS_BIN_PATH}/bats"
-            echo "PATH=${PATH}"
             export PATH="${PATH}":${{ steps.calyptia-cli.outputs.path }}
+            sleep 3
+            cat mock.log
             ./run-bats.sh ${{ inputs.calyptia-tests }}
             kill -9 "$(cat MOCK.PID)"
           shell: bash
@@ -192,10 +191,12 @@
             export CALYPTIA_CLOUD_URL=http://127.0.0.1:8080
             export CALYPTIA_CLOUD_TOKEN=eyJQcm9qZWN0SUQiOiJmb29iYXIifQ.faketoken
             (cd fleet-mock-api;
-              go run main.go > /dev/null &
+              go run main.go > mock.log &
               echo $! > ../MOCK.PID
             )
             export PATH="${PATH}":${{ steps.calyptia-cli.outputs.path }}
+            sleep 3
+            cat mock.log
             ./run-bats.sh ${{ inputs.calyptia-tests }}
             kill -9 "$(cat MOCK.PID)"
           # shell: bash
