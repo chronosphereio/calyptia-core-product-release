@@ -11,6 +11,8 @@ concurrency:
 jobs:
   ci-get-metadata:
     uses: ./.github/workflows/get-versions.yaml
+    secrets:
+      github-token: ${{ secrets.CI_PAT }}
 
   ci-e2e-tests:
     needs:
@@ -70,6 +72,25 @@ jobs:
       registry-password: ${{ secrets.CI_PAT }}
       # Replace with playground key after: https://app.asana.com/0/1205042382663691/1205231066738712/f
       google-access-key: ${{ secrets.GCP_SA_KEY }}
+      github-token: ${{ secrets.CI_PAT }}
+
+  ci-fleet-tests:
+    uses: ./.github/workflows/call-fleet-integration-tests.yaml
+    strategy:
+      fail-fast: false
+      matrix:
+        testset:
+          - fleet/cli
+        runner:
+          - macos-latest
+          - windows-latest
+    with:
+      calyptia-tests: "${{ matrix.testset }}/"
+      calyptia-lts-version: 23.10.2
+      runner: "${{ matrix.runner }}"
+      # update to main when changes have been merged
+      ref: pwhelan-fleet-e2e
+    secrets:
       github-token: ${{ secrets.CI_PAT }}
 
   ci-generate-reports:
