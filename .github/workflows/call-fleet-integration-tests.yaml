@@ -105,7 +105,8 @@
             export CALYPTIA_CLOUD_URL=http://127.0.0.1:8080
             export CALYPTIA_CLOUD_TOKEN=eyJQcm9qZWN0SUQiOiJmb29iYXIifQ.faketoken
             (cd fleet-mock-api;
-              go run main.go > mock.log &
+              # step RUNNER_TRACKING_ID="" in an attempt to avoid process cleanup
+              env RUNNER_TRACKING_ID="" go run main.go > mock.log &
               echo $! > ../MOCK.PID
             )
             export PATH="${PATH}":${{ steps.calyptia-cli.outputs.path }}
@@ -191,7 +192,8 @@
             export CALYPTIA_CLOUD_URL=http://127.0.0.1:8080
             export CALYPTIA_CLOUD_TOKEN=eyJQcm9qZWN0SUQiOiJmb29iYXIifQ.faketoken
             (cd fleet-mock-api;
-              go run main.go > mock.log &
+              # step RUNNER_TRACKING_ID="" in an attempt to avoid process cleanup
+              env RUNNER_TRACKING_ID="" go run main.go > mock.log &
               echo $! > ../MOCK.PID
             )
             export PATH="${PATH}":${{ steps.calyptia-cli.outputs.path }}
