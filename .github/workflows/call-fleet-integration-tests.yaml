@@ -112,8 +112,7 @@
         - name: Install dependencies
           run: |
             # missing: time (reserved shell keyword)
-            brew update
-            brew install netcat lsof parallel httpie jq bc python3 coreutils
+            choco install netcat lsof parallel httpie jq bc python3 coreutils
           shell: bash
         - name: Set Architecture Package according to runner
           id: pkgarch
