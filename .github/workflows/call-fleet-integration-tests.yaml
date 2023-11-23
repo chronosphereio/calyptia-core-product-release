@@ -106,7 +106,8 @@
             export CALYPTIA_CLOUD_TOKEN=eyJQcm9qZWN0SUQiOiJmb29iYXIifQ.faketoken
             (cd fleet-mock-api;
               # step RUNNER_TRACKING_ID="" in an attempt to avoid process cleanup
-              env RUNNER_TRACKING_ID="" go run main.go > mock.log &
+              go build ./
+              env RUNNER_TRACKING_ID="" ./fleet-mock-api > mock.log &
               echo $! > ../MOCK.PID
             )
             export PATH="${PATH}":${{ steps.calyptia-cli.outputs.path }}
@@ -193,7 +194,8 @@
             export CALYPTIA_CLOUD_TOKEN=eyJQcm9qZWN0SUQiOiJmb29iYXIifQ.faketoken
             (cd fleet-mock-api;
               # step RUNNER_TRACKING_ID="" in an attempt to avoid process cleanup
-              env RUNNER_TRACKING_ID="" go run main.go > mock.log &
+              go build ./
+              env RUNNER_TRACKING_ID="" ./fleet-mock-api > mock.log &
               echo $! > ../MOCK.PID
             )
             export PATH="${PATH}":${{ steps.calyptia-cli.outputs.path }}
