@@ -66,7 +66,7 @@
         # missing: lsof, parallel, bc
         - name: Install dependencies
           run: |
-            choco install netcat httpie jq python3 coreutils
+            choco install netcat httpie
           shell: bash
         - name: Download and Install Calyptia Fluent-Bit LTS Package
           id: pkginstall
@@ -112,7 +112,7 @@
           run: |
             # missing: time (reserved shell keyword)
             brew update
-            brew install netcat lsof parallel httpie jq bc coreutils
+            brew install netcat lsof parallel httpie bc coreutils
           shell: bash
         - name: Set Architecture Package according to runner
           id: pkgarch
