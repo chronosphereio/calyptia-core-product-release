@@ -113,7 +113,7 @@
               go run main.go > /dev/null &
               echo $! > ../MOCK.PID
             )
-            export PATH="${PATH}":${{ steps.calyptia-cli.outputs.bin }}
+            export PATH="${PATH}":${{ steps.calyptia-cli.outputs.path }}
             ./run-bats.sh ${{ inputs.calyptia-tests }}
             kill -9 "$(cat MOCK.PID)"
           shell: bash
@@ -194,7 +194,7 @@
               go run main.go > /dev/null &
               echo $! > ../MOCK.PID
             )
-            export PATH="${PATH}":${{ steps.calyptia-cli.outputs.bin }}
+            export PATH="${PATH}":${{ steps.calyptia-cli.outputs.path }}
             ./run-bats.sh ${{ inputs.calyptia-tests }}
             kill -9 "$(cat MOCK.PID)"
           # shell: bash
