@@ -3,10 +3,10 @@
   on:
     workflow_call:
       inputs:
-        cli-version:
+        calyptia-cli-version:
           type: string
           required: false
-          default: latest
+          default: 1.11.0
           description: release version of the calyptia cli to use.
         calyptia-lts-version:
           type: string
@@ -36,7 +36,7 @@
           description: The Github token for checking out the code.
           required: false # TODO: switch over once done
   env:
-    CALYPTIA_CLI_VERSION: ${{ inputs.cli-version }}
+    CALYPTIA_CLI_VERSION: ${{ inputs.calyptia-cli-version }}
 
   jobs:
     verify-inputs:
@@ -79,6 +79,17 @@
             unzip calyptia-fluent-bit-win64.zip -d /tmp
             mv /tmp/calyptia-fluent-bit-* /tmp/calyptia-fluent-bit
             echo "bin=/tmp/calyptia-fluent-bit/bin/calyptia-fluent-bit" >> "${GITHUB_OUTPUT}"
+        - name: Install Calyptia CLI
+          id: calyptia-cli
+          shell: bash
+          run: |
+            URL="https://github.com/calyptia/cli/releases/download"
+            URL="${URL}/v${{ inputs.calyptia-cli-version }}"
+            URL="${URL}/cli_${{ inputs.calyptia-cli-version }}_windows_amd64.tar.gz"
+            curl "${URL}" --output /tmp/calyptia-cli.tar.gz
+            mkdir -p /tmp/calyptia-cli/
+            tar zxvf -C /tmp/calyptia-cli/
+            echo "path=/tmp/calyptia-cli" >> "${GITHUB_OUTPUT}"
         - name: Checkout the Code
           uses: actions/checkout@v4
           with:
@@ -101,6 +112,7 @@
               go run main.go > /dev/null &
               echo $! > ../MOCK.PID
             )
+            export PATH="${PATH}":${{ steps.calyptia-cli.outputs.bin }}
             ./run-bats.sh ${{ inputs.calyptia-tests }}
             kill -9 "$(cat MOCK.PID)"
           shell: bash
@@ -128,9 +140,11 @@
             echo -n "Runner architecture: "
             uname -m
             if [ "$(uname -m)" == "arm64" ]; then
-              echo "arch=apple" >> "${GITHUB_OUTPUT}"
+              echo "brand=apple" >> "${GITHUB_OUTPUT}"
+              echo "arch=arm64" >> "${GITHUB_OUTPUT}"
             else
-              echo "arch=intel" >> "${GITHUB_OUTPUT}"
+              echo "brand=intel" >> "${GITHUB_OUTPUT}"
+              echo "arch=amd64" >> "${GITHUB_OUTPUT}"
             fi
         - name: Download and Install Calyptia Fluent-Bit LTS Package
           id: pkginstall
@@ -138,11 +152,23 @@
           run: |
             URL="${{ inputs.calyptia-lts-repo }}/macos"
             URL="${URL}/${{ inputs.calyptia-lts-version }}"
-            URL="${URL}/calyptia-fluent-bit-${{ inputs.calyptia-lts-version }}-${{ steps.pkgarch.outputs.arch }}.pkg"
+            URL="${URL}/calyptia-fluent-bit-${{ inputs.calyptia-lts-version }}-${{ steps.pkgarch.outputs.brand }}.pkg"
             wget "${URL}" -O calyptia-fluent-bit.pkg
             installer -pkg calyptia-fluent-bit.pkg -target CurrentUserHomeDirectory
             # pkgutil --lsbom io.fluentbit.calyptia-fluent-bit.binary --volume $HOME
             echo "bin=${HOME}/./usr/local/bin/calyptia-fluent-bit" >> "${GITHUB_OUTPUT}"
+        - name: Install Calyptia CLI
+          id: calyptia-cli
+          shell: bash
+          run: |
+            URL="https://github.com/calyptia/cli/releases/download"
+            URL="${URL}/v${{ inputs.calyptia-cli-version }}"
+            URL="${URL}/cli_${{ inputs.calyptia-cli-version }}_darwin"
+            URL="${URL}_${{ steps.pkgarch.outputs.arch }}.tar.gz"
+            curl "${URL}" --output /tmp/calyptia-cli.tar.gz
+            mkdir -p /tmp/calyptia-cli/
+            tar zxvf -C /tmp/calyptia-cli/
+            echo "path=/tmp/calyptia-cli" >> "${GITHUB_OUTPUT}"
         - name: Checkout the Code
           uses: actions/checkout@v4
           with:
@@ -165,6 +191,7 @@
               go run main.go > /dev/null &
               echo $! > ../MOCK.PID
             )
+            export PATH="${PATH}":${{ steps.calyptia-cli.outputs.bin }}
             ./run-bats.sh ${{ inputs.calyptia-tests }}
             kill -9 "$(cat MOCK.PID)"
           # shell: bash
