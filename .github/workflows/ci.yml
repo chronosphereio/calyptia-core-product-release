@@ -90,6 +90,8 @@ jobs:
       ref: pwhelan-fleet-e2e
     secrets:
       github-token: ${{ secrets.CI_PAT }}
+      CALYPTIA_CLOUD_URL: ${{ secrets.CALYPTIA_CLOUD_URL }}
+      CALYPTIA_CLOUD_TOKEN: ${{ secrets.CALYPTIA_CLOUD_TOKEN }}
 
   ci-generate-reports:
     name: Generate SBOM and CVE reports for release
