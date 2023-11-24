@@ -39,7 +39,8 @@ jobs:
             path: reports/
 
         - name: Tar up reports
-          run: tar -czvf sbom-cves.tar.gz -C reports/
+          run: tar -czvf sbom-cves.tar.gz -C reports/ .
+          shell: bash
 
         - name: Create release for tag
           uses: softprops/action-gh-release@v1
@@ -77,11 +78,26 @@ jobs:
             repository: calyptia/chart-cloud-standalone
             token: ${{ secrets.CI_PAT }}
 
+        - name: Semver chart version
+          id: get-chart-version
+          run: |
+            # Strip the v's
+            if [[ "$CHART_VERSION" =~ ^v?([0-9]+\.[0-9]+\.[0-9])+$ ]] ; then
+              echo "Updated to: ${BASH_REMATCH[1]}"
+              echo "chart-version=${BASH_REMATCH[1]}" >> $GITHUB_OUTPUT
+            else
+              echo "Invalid tag: $CHART_VERSION"
+              exit 1
+            fi
+          shell: bash
+          env:
+            CHART_VERSION: ${{ github.ref_name }}
+
         # This is the heavy lifter and where any updates/coupling are present
         - run: ./scripts/update-versions.sh
           shell: bash
           env:
-            CHART_VERSION: ${{ github.ref_name }}
+            CHART_VERSION: ${{ steps.get-chart-version.outputs.chart-version }}
             CLI_VERSION: ${{ needs.ci-get-metadata.outputs.cli-version }}
             CLOUD_VERSION: ${{ needs.ci-get-metadata.outputs.cloud-version }}
             CORE_FB_VERSION: ${{ needs.ci-get-metadata.outputs.core-fluent-bit-version }}
@@ -152,7 +168,13 @@ jobs:
             token: ${{ secrets.CI_PAT }}
 
         - name: Create or checkout branch
-          run: (git show-branch "$BRANCH" &>/dev/null) && (git checkout "$BRANCH") || (git checkout -b "$BRANCH")
+          run: |
+            if git show-branch "$BRANCH" &> /dev/null; then
+              git checkout "$BRANCH"
+            else
+              git checkout -b "$BRANCH"
+              git push --set-upstream origin "$BRANCH"
+            fi
           shell: bash
           env:
             BRANCH: ${{ steps.get-branch.outputs.branch }}
