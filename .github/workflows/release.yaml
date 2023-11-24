@@ -38,6 +38,9 @@ jobs:
             name: ${{ needs.ci-generate-reports.outputs.artefact-name }}
             path: reports/
 
+        - name: Tar up reports
+          run: tar -czvf sbom-cves.tar.gz -C reports/
+
         - name: Create release for tag
           uses: softprops/action-gh-release@v1
           with:
@@ -54,7 +57,7 @@ jobs:
             # Using **/*.json gives duplicate uploads for component-config.json so fails on the second one as already exists
             files: |
                 *.json
-                reports/*.json
+                sbom-cves.tar.gz
             generate_release_notes: false
 
     ci-update-self-hosted:
