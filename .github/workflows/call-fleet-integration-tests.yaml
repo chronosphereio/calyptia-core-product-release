@@ -101,12 +101,12 @@ jobs:
           URL="${URL}/${{ inputs.calyptia-lts-version }}"
           URL="${URL}/calyptia-fluent-bit"
           URL="${URL}-${{ inputs.calyptia-lts-version }}-win64.zip"
-          curl "${URL}" --output calyptia-fluent-bit.zip
+          curl "${URL}" --output /tmp/calyptia-fluent-bit.zip
       - name: Unzip Calyptia Package
         shell: bash
         id: pkginstall
         run: |
-          unzip calyptia-fluent-bit.zip -d /tmp
+          unzip /tmp/calyptia-fluent-bit.zip -d /tmp
           mv /tmp/calyptia-fluent-bit-* /tmp/calyptia-fluent-bit
           echo "bin=/tmp/calyptia-fluent-bit/bin/calyptia-fluent-bit" \
             >> "${GITHUB_OUTPUT}"
