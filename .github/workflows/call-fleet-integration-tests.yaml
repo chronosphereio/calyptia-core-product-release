@@ -10,8 +10,12 @@ on:
         description: release version of the calyptia cli to use.
       calyptia-lts-version:
         type: string
-        required: true
+        required: false
         description: release version of calyptia fluent-bit lts to use.
+      calyptia-package-artefact:
+        type: string
+        required: false
+        description: package artefact for calyptia fluent-bit
       ref:
         description: The commit, tag or branch of this repository to checkout
         type: string
@@ -31,6 +35,7 @@ on:
         type: string
         required: false
         default: https://calyptia-lts-staging-standard.s3.amazonaws.com
+
     secrets:
       CALYPTIA_CLOUD_URL:
         description: The URL to the cloud instance used for testing.
@@ -72,24 +77,48 @@ jobs:
         uses: mig4/setup-bats@v1
         with:
           bats-version: 1.10.0
+      - name: Download Fluent-Bit Binary from Artefact
+        id: download
+        if: ${{ inputs.calyptia-package-artefact }}
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ inputs.calyptia-package-artefact }}
+      - name: Transform Download Path to MSYS2
+        if: ${{ inputs.calyptia-package-artefact }}
+        shell: bash
+        run: |
+          # transform download-path into msys2 equivalent
+            DP="${{ steps.download.outputs.download-path }}"
+            DP=$(echo $DP | sed 's/\([A-Za-z]\)\:/\l\1/' | sed 's/\\/\//g')
+            DP="/${DP}"
+            # unzip the one zip in download path which should be the calyptia
+            # package zip.
+            mv "${DP}/*.zip" /tmp/calyptia-fluent-bit.zip
       - name: Download and Install Calyptia Fluent-Bit LTS Package
-        id: pkginstall
+        if: ${{ inputs.calyptia-cli-version != '' }}
         shell: bash
         run: |
           URL="${{ inputs.calyptia-lts-repo }}/windows"
           URL="${URL}/${{ inputs.calyptia-lts-version }}"
-          URL="${URL}/calyptia-fluent-bit-${{ inputs.calyptia-lts-version }}-win64.zip"
+          URL="${URL}/calyptia-fluent-bit"
+          URL="${URL}-${{ inputs.calyptia-lts-version }}-win64.zip"
           curl "${URL}" --output calyptia-fluent-bit-win64.zip
+      - name: Unzip Calyptia Package
+        shell: bash
+        id: pkginstall
+        run: |
           unzip calyptia-fluent-bit-win64.zip -d /tmp
           mv /tmp/calyptia-fluent-bit-* /tmp/calyptia-fluent-bit
-          echo "bin=/tmp/calyptia-fluent-bit/bin/calyptia-fluent-bit" >> "${GITHUB_OUTPUT}"
+          echo "bin=/tmp/calyptia-fluent-bit/bin/calyptia-fluent-bit" \
+            >> "${GITHUB_OUTPUT}"
       - name: Install Calyptia CLI
         id: calyptia-cli
         shell: bash
         run: |
           URL="https://github.com/calyptia/cli/releases/download"
           URL="${URL}/v${{ inputs.calyptia-cli-version }}"
-          URL="${URL}/cli_${{ inputs.calyptia-cli-version }}_windows_amd64.tar.gz"
+          URL="${URL}/cli_${{ inputs.calyptia-cli-version }}"
+          URL="${URL}_windows_amd64.tar.gz"
           echo "Calyptia CLI URL: ${URL}"
           curl -L "${URL}" --output /tmp/calyptia-cli.tar.gz
           mkdir -p /tmp/calyptia-cli/
