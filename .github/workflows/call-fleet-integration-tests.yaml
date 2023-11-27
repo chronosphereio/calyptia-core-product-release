@@ -92,10 +92,7 @@ jobs:
             DP="${{ steps.download.outputs.download-path }}"
             DP=$(echo $DP | sed 's/\([A-Za-z]\)\:/\l\1/' | sed 's/\\/\//g')
             DP="/${DP}"
-            ls -alF "${DP}"
-            # unzip the one zip in download path which should be the calyptia
-            # package zip.
-            mv "${DP}/*.zip" /tmp/calyptia-fluent-bit.zip
+            mv "${DP}/"*.zip /tmp/calyptia-fluent-bit.zip
       - name: Download and Install Calyptia Fluent-Bit LTS Package
         if: ${{ inputs.calyptia-cli-version != '' }}
         shell: bash
