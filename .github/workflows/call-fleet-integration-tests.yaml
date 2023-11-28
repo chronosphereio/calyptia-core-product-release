@@ -8,10 +8,6 @@ on:
         required: false
         default: 1.11.0
         description: release version of the calyptia cli to use.
-      calyptia-lts-version:
-        type: string
-        required: false
-        description: release version of calyptia fluent-bit lts to use.
       calyptia-package-artefact:
         type: string
         required: false
@@ -93,15 +89,6 @@ jobs:
             DP=$(echo $DP | sed 's/\([A-Za-z]\)\:/\l\1/' | sed 's/\\/\//g')
             DP="/${DP}"
             mv "${DP}/"*.zip /tmp/calyptia-fluent-bit.zip
-      - name: Download and Install Calyptia Fluent-Bit LTS Package
-        if: ${{ inputs.calyptia-cli-version != '' }}
-        shell: bash
-        run: |
-          URL="${{ inputs.calyptia-lts-repo }}/windows"
-          URL="${URL}/${{ inputs.calyptia-lts-version }}"
-          URL="${URL}/calyptia-fluent-bit"
-          URL="${URL}-${{ inputs.calyptia-lts-version }}-win64.zip"
-          curl "${URL}" --output /tmp/calyptia-fluent-bit.zip
       - name: Unzip Calyptia Package
         shell: bash
         id: pkginstall
