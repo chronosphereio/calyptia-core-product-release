@@ -169,7 +169,7 @@ jobs:
 
         - name: Create or checkout branch
           run: |
-            if git show-branch "$BRANCH" &> /dev/null; then
+            if git ls-remote --exit-code --heads origin refs/heads/"$BRANCH" &> /dev/null; then
               git checkout "$BRANCH"
             else
               git checkout -b "$BRANCH"
