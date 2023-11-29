@@ -31,22 +31,24 @@ on:
         type: string
         required: false
         default: https://calyptia-lts-staging-standard.s3.amazonaws.com
-
-    secrets:
-      CALYPTIA_CLOUD_URL:
-        description: The URL to the cloud instance used for testing.
+      calyptia-cloud-url:
+        description: The cloud URL to use
+        type: string
         required: true
-      CALYPTIA_CLOUD_TOKEN:
+    secrets:
+      calyptia-cloud-token:
         description: |
           The token used to authenticate to the cloud instance used for
           testing.
         required: true
       github-token:
         description: The Github token for checking out the code.
-        # TODO: switch over once done
-        required: false
+        required: true
 env:
   CALYPTIA_CLI_VERSION: ${{ inputs.calyptia-cli-version }}
+  CALYPTIA_CLOUD_URL: ${{ inputs.calyptia-cloud-url }}
+  CALYPTIA_CLOUD_TOKEN: ${{ secrets.CALYPTIA_CLOUD_TOKEN }}
+  GITHUB_TOKEN: ${{ secrets.github-token }}
 
 jobs:
   verify-inputs:
@@ -125,8 +127,6 @@ jobs:
         env:
           TEST_UID: ${{ github.repository }}-${{ github.run_id }}-${{ strategy.job-index }}
           FLUENTBIT_BIN: ${{ steps.pkginstall.outputs.bin }}
-          CALYPTIA_CLOUD_URL: ${{ secrets.CALYPTIA_CLOUD_URL }}
-          CALYPTIA_CLOUD_TOKEN: ${{ secrets.CALYPTIA_CLOUD_TOKEN }}
 
   run-integration-tests-macos:
     if: contains(inputs.runner, 'macos')
@@ -191,10 +191,7 @@ jobs:
         run: |
           export PATH="${PATH}":${{ steps.calyptia-cli.outputs.path }}
           ./run-bats.sh ${{ inputs.calyptia-tests }}
-        # shell: bash
         timeout-minutes: 30
         env:
-          CALYPTIA_CLOUD_URL: ${{ secrets.CALYPTIA_CLOUD_URL }}
-          CALYPTIA_CLOUD_TOKEN: ${{ secrets.CALYPTIA_CLOUD_TOKEN }}
           TEST_UID: ${{ github.repository }}-${{ github.run_id }}-${{ strategy.job-index }}
           FLUENTBIT_BIN: ${{ steps.pkginstall.outputs.bin }}
