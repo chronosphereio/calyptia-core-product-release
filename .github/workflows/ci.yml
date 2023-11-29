@@ -88,9 +88,9 @@ jobs:
       runner: "${{ matrix.runner }}"
       # update to main when changes have been merged
       ref: pwhelan-fleet-e2e
+      calyptia-cloud-url: "https://cloud-api-dev.calyptia.com"
     secrets:
       github-token: ${{ secrets.CI_PAT }}
-      calyptia-cloud-url: ${{ secrets.CALYPTIA_CLOUD_URL }}
       calyptia-cloud-token: ${{ secrets.CALYPTIA_CLOUD_TOKEN }}
 
   ci-generate-reports:
