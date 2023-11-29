@@ -80,8 +80,10 @@ jobs:
       # missing: lsof, parallel, bc
       - name: Install dependencies
         run: |
-          choco install netcat httpie kubectl
+          choco install netcat httpie
         shell: bash
+
+      - uses: azure/setup-kubectl@v3
 
       - name: Install Bats
         uses: mig4/setup-bats@v1
@@ -160,6 +162,7 @@ jobs:
           # brew update
           brew install netcat lsof parallel httpie bc coreutils
         shell: bash
+      - uses: azure/setup-kubectl@v3
       - name: Install Bats
         uses: mig4/setup-bats@v1
         with:
