@@ -12,6 +12,7 @@ on:
         type: string
         required: false
         description: package artefact for calyptia fluent-bit
+        default: ""
       ref:
         description: The commit, tag or branch of this repository to checkout
         type: string
@@ -31,6 +32,11 @@ on:
         type: string
         required: false
         default: https://calyptia-lts-staging-standard.s3.amazonaws.com
+      calyptia-lts-version:
+        description: The version of Calyptia Fluent Bit to take from the repo.
+        type: string
+        required: false
+        default: ""
       calyptia-cloud-url:
         description: The cloud URL to use
         type: string
@@ -47,7 +53,7 @@ on:
 env:
   CALYPTIA_CLI_VERSION: ${{ inputs.calyptia-cli-version }}
   CALYPTIA_CLOUD_URL: ${{ inputs.calyptia-cloud-url }}
-  CALYPTIA_CLOUD_TOKEN: ${{ secrets.CALYPTIA_CLOUD_TOKEN }}
+  CALYPTIA_CLOUD_TOKEN: ${{ secrets.calyptia-cloud-token }}
   GITHUB_TOKEN: ${{ secrets.github-token }}
 
 jobs:
@@ -56,6 +62,11 @@ jobs:
     runs-on: ubuntu-latest
     permissions: {}
     steps:
+      - name: Fail if missing version and package
+        if: inputs.calyptia-lts-version == '' && inputs.calyptia-package-artefact == ''
+        run: exit 1
+        shell: bash
+
       - name: Success
         run: echo "Checks complete"
         shell: bash
@@ -71,10 +82,13 @@ jobs:
         run: |
           choco install netcat httpie
         shell: bash
+
       - name: Install Bats
         uses: mig4/setup-bats@v1
         with:
           bats-version: 1.10.0
+
+      # TODO: install from LTS repo
       - name: Download Fluent-Bit Binary from Artefact
         id: download
         if: ${{ inputs.calyptia-package-artefact }}
@@ -82,16 +96,19 @@ jobs:
         with:
           name: ${{ inputs.calyptia-package-artefact }}
           path: /tmp/fluent-bit
+
       - name: Transform Download Path to MSYS2
         if: ${{ inputs.calyptia-package-artefact }}
         shell: bash
+        # transform download-path into msys2 equivalent
         run: |
-          # transform download-path into msys2 equivalent
             DP="${{ steps.download.outputs.download-path }}"
             DP=$(echo $DP | sed 's/\([A-Za-z]\)\:/\l\1/' | sed 's/\\/\//g')
             DP="/${DP}"
             mv "${DP}/"*.zip /tmp/calyptia-fluent-bit.zip
+
       - name: Unzip Calyptia Package
+        if: ${{ inputs.calyptia-package-artefact }}
         shell: bash
         id: pkginstall
         run: |
@@ -99,6 +116,7 @@ jobs:
           mv /tmp/calyptia-fluent-bit-* /tmp/calyptia-fluent-bit
           echo "bin=/tmp/calyptia-fluent-bit/bin/calyptia-fluent-bit" \
             >> "${GITHUB_OUTPUT}"
+
       - name: Install Calyptia CLI
         id: calyptia-cli
         shell: bash
@@ -112,12 +130,14 @@ jobs:
           mkdir -p /tmp/calyptia-cli/
           tar zxvf /tmp/calyptia-cli.tar.gz -C /tmp/calyptia-cli/
           echo "path=/tmp/calyptia-cli" >> "${GITHUB_OUTPUT}"
+
       - name: Checkout the Code
         uses: actions/checkout@v4
         with:
           repository: calyptia/cloud-e2e
           ref: ${{ inputs.ref }}
           token: ${{ secrets.github-token }}
+
       - name: Run bats tests
         run: |
           export PATH="${PATH}":${{ steps.calyptia-cli.outputs.path }}
@@ -156,8 +176,10 @@ jobs:
             echo "brand=intel" >> "${GITHUB_OUTPUT}"
             echo "arch=amd64" >> "${GITHUB_OUTPUT}"
           fi
+      # TODO: add package usage
       - name: Download and Install Calyptia Fluent-Bit LTS Package
         id: pkginstall
+        if: inputs.calyptia-lts-version != ''
         shell: bash
         run: |
           URL="${{ inputs.calyptia-lts-repo }}/macos"
