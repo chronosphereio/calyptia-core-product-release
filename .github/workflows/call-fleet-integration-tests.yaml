@@ -80,7 +80,7 @@ jobs:
       # missing: lsof, parallel, bc
       - name: Install dependencies
         run: |
-          choco install netcat httpie
+          choco install netcat httpie kubectl
         shell: bash
 
       - name: Install Bats
@@ -88,7 +88,8 @@ jobs:
         with:
           bats-version: 1.10.0
 
-      # TODO: install from LTS repo
+      # TODO: install from LTS repo: https://github.com/marketplace/actions/engineerd-configurator
+
       - name: Download Fluent-Bit Binary from Artefact
         id: download
         if: ${{ inputs.calyptia-package-artefact }}
@@ -114,8 +115,7 @@ jobs:
         run: |
           unzip /tmp/calyptia-fluent-bit.zip -d /tmp
           mv /tmp/calyptia-fluent-bit-* /tmp/calyptia-fluent-bit
-          echo "bin=/tmp/calyptia-fluent-bit/bin/calyptia-fluent-bit" \
-            >> "${GITHUB_OUTPUT}"
+          echo "bin=/tmp/calyptia-fluent-bit/bin/calyptia-fluent-bit" >> "${GITHUB_OUTPUT}"
 
       - name: Install Calyptia CLI
         id: calyptia-cli
@@ -146,7 +146,7 @@ jobs:
         timeout-minutes: 30
         env:
           TEST_UID: ${{ github.repository }}-${{ github.run_id }}-${{ strategy.job-index }}
-          FLUENTBIT_BIN: ${{ steps.pkginstall.outputs.bin }}
+          FLUENTBIT_BIN: /tmp/calyptia-fluent-bit/bin/calyptia-fluent-bit
 
   run-integration-tests-macos:
     if: contains(inputs.runner, 'macos')
