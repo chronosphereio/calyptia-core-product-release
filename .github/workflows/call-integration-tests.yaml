@@ -12,7 +12,7 @@
           type: string
           required: false
           default: ghcr.io/calyptia/cli:main
-          description: Deprecated - will be removed.
+          description: CLI image to use.
         cloud-image:
           type: string
           required: false
@@ -102,12 +102,14 @@
     AWS_EC2_METADATA_DISABLED: true
     FLUENTD_VERSION: ${{ inputs.fluentd-version }}
     CALYPTIA_CLI_VERSION: ${{ inputs.cli-version }}
+    CALYPTIA_CLI_IMAGE: ${{ inputs.cli-image }}
     CALYPTIA_CLOUD_IMAGE: ${{ inputs.cloud-image }}
     CALYPTIA_CORE_IMAGE: ${{ inputs.core-image }}
     CALYPTIA_CORE_OPERATOR_IMAGE: ${{ inputs.core-operator-image }}
     CALYPTIA_CORE_OPERATOR_FROM_CLOUD_IMAGE: ${{ inputs.core-operator-from-cloud-image }}
     CALYPTIA_CORE_OPERATOR_TO_CLOUD_IMAGE: ${{ inputs.core-operator-to-cloud-image }}
     CALYPTIA_CORE_OPERATOR_CRD: ${{ (inputs.core-operator-crd-manifest != '' && 'override/crd.yaml') || '' }}
+    GITHUB_TOKEN: ${{ secrets.github-token }}
 
   jobs:
     verify-inputs:
