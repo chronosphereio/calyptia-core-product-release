@@ -7,7 +7,7 @@
           type: string
           required: false
           default: latest
-          description: release version of the calyptia cli to use.
+          description: Release version of the calyptia cli to use, with the `v` prefix (release rather than numeric version)
         cli-image:
           type: string
           required: false
@@ -333,7 +333,7 @@
             includePrereleases: false
             repo: calyptia/cli
             token: ${{ secrets.github-token }}
-            urlTemplate: https://github.com/calyptia/cli/releases/download/{{ version }}/v{{ version }}/cli_{{ version }}_linux_amd64.tar.gz
+            urlTemplate: https://github.com/calyptia/cli/releases/download/{{ version }}/cli_{{ rawVersion }}_linux_amd64.tar.gz
             pathInArchive: calyptia
 
         - name: Test version of CLI
@@ -453,7 +453,7 @@
             includePrereleases: false
             repo: calyptia/cli
             token: ${{ secrets.github-token }}
-            urlTemplate: https://github.com/calyptia/cli/releases/download/{{ version }}/v{{ version }}/cli_{{ version }}_linux_amd64.tar.gz
+            urlTemplate: https://github.com/calyptia/cli/releases/download/{{ version }}/cli_{{ rawVersion }}_linux_amd64.tar.gz
             pathInArchive: calyptia
 
         - name: Test version of CLI

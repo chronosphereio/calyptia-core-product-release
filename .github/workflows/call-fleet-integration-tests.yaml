@@ -7,7 +7,7 @@ on:
         type: string
         required: false
         default: latest
-        description: release version of the calyptia cli to use.
+        description: release version of the calyptia cli to use, with the v prefix
       calyptia-package-artefact:
         type: string
         required: false
@@ -128,7 +128,7 @@ jobs:
           includePrereleases: false
           repo: calyptia/cli
           token: ${{ secrets.github-token }}
-          urlTemplate: https://github.com/calyptia/cli/releases/download/{{ version }}/v{{ version }}/cli_{{ version }}_windows_amd64.tar.gz
+          urlTemplate: https://github.com/calyptia/cli/releases/download/{{ version }}/cli_{{ rawVersion }}_windows_amd64.tar.gz
           pathInArchive: calyptia
 
       - name: Checkout the Code
@@ -199,7 +199,7 @@ jobs:
           includePrereleases: false
           repo: calyptia/cli
           token: ${{ secrets.github-token }}
-          urlTemplate: https://github.com/calyptia/cli/releases/download/{{ version }}/v{{ version }}/cli_{{ version }}_darwin_${{ steps.pkgarch.outputs.arch }}.tar.gz
+          urlTemplate: https://github.com/calyptia/cli/releases/download/v{{ version }}/cli_{{ rawVersion }}_darwin_${{ steps.pkgarch.outputs.arch }}.tar.gz
           pathInArchive: calyptia
 
       - name: Checkout the Code
