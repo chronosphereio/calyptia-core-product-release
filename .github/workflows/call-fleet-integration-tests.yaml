@@ -129,6 +129,7 @@ jobs:
           repo: calyptia/cli
           token: ${{ secrets.github-token }}
           urlTemplate: https://github.com/calyptia/cli/releases/download/{{ version }}/v{{ version }}/cli_{{ version }}_windows_amd64.tar.gz
+          pathInArchive: calyptia
 
       - name: Checkout the Code
         uses: actions/checkout@v4
@@ -199,6 +200,7 @@ jobs:
           repo: calyptia/cli
           token: ${{ secrets.github-token }}
           urlTemplate: https://github.com/calyptia/cli/releases/download/{{ version }}/v{{ version }}/cli_{{ version }}_darwin_${{ steps.pkgarch.outputs.arch }}.tar.gz
+          pathInArchive: calyptia
 
       - name: Checkout the Code
         uses: actions/checkout@v4
