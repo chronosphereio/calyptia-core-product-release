@@ -84,11 +84,11 @@ jobs:
         with:
           cli-version: v${{ inputs.cli-version }}
           cli-image: v${{ inputs.cli-image }}
-          cloud-image: ghcr.io/calyptia/cloud:${{ inputs.cloud-version }}
-          core-image: ghcr.io/calyptia/core:${{ inputs.core-version }}
-          core-operator-image: ghcr.io/calyptia/core-operator:${{ inputs.core-operator-version }}
-          core-operator-from-cloud-image: ghcr.io/calyptia/core-operator/sync-from-cloud:${{ inputs.core-operator-version }}
-          core-operator-to-cloud-image: ghcr.io/calyptia/core-operator/sync-to-cloud:${{ inputs.core-operator-version }}
+          cloud-image: ghcr.io/calyptia/cloud:${{ inputs.cloud-image }}
+          core-image: ghcr.io/calyptia/core:${{ inputs.core-image }}
+          core-operator-image: ghcr.io/calyptia/core-operator:${{ inputs.core-operator-image }}
+          core-operator-from-cloud-image: ghcr.io/calyptia/core-operator/sync-from-cloud:${{ inputs.core-operator-from-cloud-image }}
+          core-operator-to-cloud-image: ghcr.io/calyptia/core-operator/sync-to-cloud:${{ inputs.core-operator-to-cloud-image }}
           frontend-image: ${{ inputs.frontend-image }}
           lua-sandbox-image: ${{ inputs.lua-sandbox-image }}
           ref: ${{ inputs.ref }}
