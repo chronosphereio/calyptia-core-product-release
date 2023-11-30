@@ -11,8 +11,8 @@
         cli-image:
           type: string
           required: false
-          default: ghcr.io/calyptia/cli:main
-          description: CLI image to use.
+          default: ''
+          description: CLI image to use to extract a custom binary from, only use this for PRs or similar.
         cloud-image:
           type: string
           required: false
@@ -102,7 +102,6 @@
     AWS_EC2_METADATA_DISABLED: true
     FLUENTD_VERSION: ${{ inputs.fluentd-version }}
     CALYPTIA_CLI_VERSION: ${{ inputs.cli-version }}
-    CALYPTIA_CLI_IMAGE: ${{ inputs.cli-image }}
     CALYPTIA_CLOUD_IMAGE: ${{ inputs.cloud-image }}
     CALYPTIA_CORE_IMAGE: ${{ inputs.core-image }}
     CALYPTIA_CORE_OPERATOR_IMAGE: ${{ inputs.core-operator-image }}
@@ -311,6 +310,32 @@
             kind load docker-image $CALYPTIA_CORE_OPERATOR_FROM_CLOUD_IMAGE
           shell: bash
 
+        - name: Install custom CLI version
+          id: custom-cli-version
+          if: inputs.cli-image != ''
+          run: |
+            docker pull "$CALYPTIA_CLI_IMAGE"
+            docker image save "$CALYPTIA_CLI_IMAGE" | tar --extract --wildcards --to-stdout '*/layer.tar' | tar --extract --ignore-zeros --verbose --directory="/tmp" 'calyptia'
+            sudo mv /tmp/calyptia /usr/local/bin/calyptia
+            sudo chmod a+x /usr/local/bin/calyptia
+          shell: bash
+          env:
+            CALYPTIA_CLI_IMAGE: ${{ inputs.cli-image }}
+
+        - name: Install released CLI version
+          if: inputs.cli-image == ''
+          run: |
+            curl -sSfL https://raw.githubusercontent.com/calyptia/cli/main/install.sh | bash
+          shell: bash
+          env:
+            cli_VERSION: ${{ inputs.cli-version }}
+            GITHUB_TOKEN: ${{ secrets.github-token }}
+            DEBUG: true
+
+        - name: Test version of CLI
+          run: calyptia version
+          shell: bash
+
         - name: Set up Cloud SDK
           uses: google-github-actions/setup-gcloud@v1
 
@@ -401,6 +426,32 @@
           with:
             name: ${{ inputs.core-operator-crd-manifest }}
             path: override
+
+        - name: Install custom CLI version
+          id: custom-cli-version
+          if: inputs.cli-image != ''
+          run: |
+            docker pull "$CALYPTIA_CLI_IMAGE"
+            docker image save "$CALYPTIA_CLI_IMAGE" | tar --extract --wildcards --to-stdout '*/layer.tar' | tar --extract --ignore-zeros --verbose --directory="/tmp" 'calyptia'
+            sudo mv /tmp/calyptia /usr/local/bin/calyptia
+            sudo chmod a+x /usr/local/bin/calyptia
+          shell: bash
+          env:
+            CALYPTIA_CLI_IMAGE: ${{ inputs.cli-image }}
+
+        - name: Install released CLI version
+          if: inputs.cli-image == ''
+          run: |
+            curl -sSfL https://raw.githubusercontent.com/calyptia/cli/main/install.sh | bash
+          shell: bash
+          env:
+            cli_VERSION: ${{ inputs.cli-version }}
+            GITHUB_TOKEN: ${{ secrets.github-token }}
+            DEBUG: true
+
+        - name: Test version of CLI
+          run: calyptia version
+          shell: bash
 
         - id: 'auth'
           uses: 'google-github-actions/auth@v2'
