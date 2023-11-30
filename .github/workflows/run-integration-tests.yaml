@@ -58,8 +58,8 @@ jobs:
     ci-e2e-tests:
         uses: ./.github/workflows/call-integration-tests.yaml
         with:
-          cli-version: v${{ inputs.cli-version }}
-          cli-image: v${{ inputs.cli-image }}
+          cli-version: ${{ inputs.cli-version }}
+          cli-image: ${{ inputs.cli-image }}
           cloud-image: ghcr.io/calyptia/cloud:${{ inputs.cloud-image }}
           core-image: ghcr.io/calyptia/core:${{ inputs.core-image }}
           core-operator-image: ghcr.io/calyptia/core-operator:${{ inputs.core-operator-image }}
