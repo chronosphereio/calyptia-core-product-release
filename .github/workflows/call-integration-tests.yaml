@@ -158,6 +158,13 @@
             exit 1
           shell: bash
 
+        - name: Check CLI version or image is set
+          if: inputs.cli-image == '' && inputs.cli-version == ''
+          run: |
+            echo "Invalid CLI configuration detected"
+            exit 1
+          shell: bash
+
         - name: Success
           run: echo "Checks complete"
           shell: bash
@@ -195,12 +202,6 @@
         - name: Set up Actuated mirror
           if: contains(inputs.runner, 'actuated')
           uses: self-actuated/hub-mirror@master
-
-        # - name: Prep SSH access just in case
-        #   # https://github.com/mxschmitt/action-tmate#detached-mode
-        #   uses: mxschmitt/action-tmate@v3
-        #   with:
-        #     detached: true
 
         - name: Checkout the Code
           uses: actions/checkout@v4
@@ -324,13 +325,15 @@
 
         - name: Install released CLI version
           if: inputs.cli-image == ''
-          run: |
-            curl -sSfL https://raw.githubusercontent.com/calyptia/cli/main/install.sh | bash
-          shell: bash
-          env:
-            cli_VERSION: ${{ inputs.cli-version }}
-            GITHUB_TOKEN: ${{ secrets.github-token }}
-            DEBUG: true
+          uses: engineerd/configurator@v0.0.10
+          with:
+            name: calyptia
+            version: ${{ inputs.cli-version }}
+            fromGitHubReleases: true
+            includePrereleases: false
+            repo: calyptia/cli
+            token: ${{ secrets.github-token }}
+            urlTemplate: https://github.com/calyptia/cli/releases/download/{{ version }}/v{{ version }}/cli_{{ version }}_linux_amd64.tar.gz
 
         - name: Test version of CLI
           run: calyptia version
@@ -441,13 +444,15 @@
 
         - name: Install released CLI version
           if: inputs.cli-image == ''
-          run: |
-            curl -sSfL https://raw.githubusercontent.com/calyptia/cli/main/install.sh | bash
-          shell: bash
-          env:
-            cli_VERSION: ${{ inputs.cli-version }}
-            GITHUB_TOKEN: ${{ secrets.github-token }}
-            DEBUG: true
+          uses: engineerd/configurator@v0.0.10
+          with:
+            name: calyptia
+            version: ${{ inputs.cli-version }}
+            fromGitHubReleases: true
+            includePrereleases: false
+            repo: calyptia/cli
+            token: ${{ secrets.github-token }}
+            urlTemplate: https://github.com/calyptia/cli/releases/download/{{ version }}/v{{ version }}/cli_{{ version }}_linux_amd64.tar.gz
 
         - name: Test version of CLI
           run: calyptia version

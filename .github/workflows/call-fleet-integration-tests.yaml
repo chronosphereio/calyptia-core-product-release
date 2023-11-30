@@ -6,7 +6,7 @@ on:
       calyptia-cli-version:
         type: string
         required: false
-        default: 1.11.0
+        default: latest
         description: release version of the calyptia cli to use.
       calyptia-package-artefact:
         type: string
@@ -119,19 +119,16 @@ jobs:
           mv /tmp/calyptia-fluent-bit-* /tmp/calyptia-fluent-bit
           echo "bin=/tmp/calyptia-fluent-bit/bin/calyptia-fluent-bit" >> "${GITHUB_OUTPUT}"
 
-      - name: Install Calyptia CLI
-        id: calyptia-cli
-        shell: bash
-        run: |
-          URL="https://github.com/calyptia/cli/releases/download"
-          URL="${URL}/v${{ inputs.calyptia-cli-version }}"
-          URL="${URL}/cli_${{ inputs.calyptia-cli-version }}"
-          URL="${URL}_windows_amd64.tar.gz"
-          echo "Calyptia CLI URL: ${URL}"
-          curl -L "${URL}" --output /tmp/calyptia-cli.tar.gz
-          mkdir -p /tmp/calyptia-cli/
-          tar zxvf /tmp/calyptia-cli.tar.gz -C /tmp/calyptia-cli/
-          echo "path=/tmp/calyptia-cli" >> "${GITHUB_OUTPUT}"
+      - name: Install CLI
+        uses: engineerd/configurator@v0.0.10
+        with:
+          name: calyptia
+          version: ${{ inputs.calyptia-cli-version }}
+          fromGitHubReleases: true
+          includePrereleases: false
+          repo: calyptia/cli
+          token: ${{ secrets.github-token }}
+          urlTemplate: https://github.com/calyptia/cli/releases/download/{{ version }}/v{{ version }}/cli_{{ version }}_windows_amd64.tar.gz
 
       - name: Checkout the Code
         uses: actions/checkout@v4
@@ -192,19 +189,18 @@ jobs:
           installer -pkg calyptia-fluent-bit.pkg -target CurrentUserHomeDirectory
           # pkgutil --lsbom io.fluentbit.calyptia-fluent-bit.binary --volume $HOME
           echo "bin=${HOME}/./usr/local/bin/calyptia-fluent-bit" >> "${GITHUB_OUTPUT}"
-      - name: Install Calyptia CLI
-        id: calyptia-cli
-        shell: bash
-        run: |
-          URL="https://github.com/calyptia/cli/releases/download"
-          URL="${URL}/v${{ inputs.calyptia-cli-version }}"
-          URL="${URL}/cli_${{ inputs.calyptia-cli-version }}_darwin"
-          URL="${URL}_${{ steps.pkgarch.outputs.arch }}.tar.gz"
-          curl -L "${URL}" --output /tmp/calyptia-cli.tar.gz
-          echo "Calyptia CLI URL: ${URL}"
-          mkdir -p /tmp/calyptia-cli/
-          tar zxvf /tmp/calyptia-cli.tar.gz -C /tmp/calyptia-cli/
-          echo "path=/tmp/calyptia-cli" >> "${GITHUB_OUTPUT}"
+
+      - name: Install CLI
+        uses: engineerd/configurator@v0.0.10
+        with:
+          name: calyptia
+          version: ${{ inputs.calyptia-cli-version }}
+          fromGitHubReleases: true
+          includePrereleases: false
+          repo: calyptia/cli
+          token: ${{ secrets.github-token }}
+          urlTemplate: https://github.com/calyptia/cli/releases/download/{{ version }}/v{{ version }}/cli_{{ version }}_darwin_${{ steps.pkgarch.outputs.arch }}.tar.gz
+
       - name: Checkout the Code
         uses: actions/checkout@v4
         with:
