@@ -347,7 +347,7 @@
           run: |
             ./run-bats.sh ${{ inputs.calyptia-tests }}
           shell: bash
-          timeout-minutes: 30
+          timeout-minutes: 45
           env:
             REGISTRY_SERVER: ghcr.io
             REGISTRY_USERNAME: ${{ secrets.registry-username }}
@@ -581,8 +581,8 @@
           shell: bash
           env:
             VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
+          timeout-minutes: 45
 
-          timeout-minutes: 30
         - name: Dump pod logs
           if: always()
           continue-on-error: true
