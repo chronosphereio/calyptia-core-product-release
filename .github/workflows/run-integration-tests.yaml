@@ -1,0 +1,103 @@
+name: Run integration tests directly with specified versions
+on:
+    workflow_dispatch:
+        inputs:
+            cli-version:
+              type: string
+              required: false
+              default: latest
+              description: Release version of the calyptia cli to use, with the `v` prefix (release rather than numeric version)
+            cli-image:
+              type: string
+              required: false
+              default: ''
+              description: CLI image to use to extract a custom binary from, only use this for PRs or similar.
+            cloud-image:
+              type: string
+              required: false
+              default: ghcr.io/calyptia/cloud:latest
+              description: docker image of calyptia/cloud
+            core-image:
+              type: string
+              required: false
+              default: ghcr.io/calyptia/core:main
+              description: docker image of calyptia-core
+            core-operator-image:
+              type: string
+              required: false
+              default: ghcr.io/calyptia/core-operator:latest
+              description: docker image of calyptia/core-operator
+            core-operator-from-cloud-image:
+              type: string
+              required: false
+              default: ghcr.io/calyptia/core-operator/sync-from-cloud:latest
+              description: docker image of calyptia/core-operator
+            core-operator-to-cloud-image:
+              type: string
+              required: false
+              default: ghcr.io/calyptia/core-operator/sync-to-cloud:latest
+              description: docker image of calyptia/core-operator
+            core-operator-crd-manifest:
+              type: string
+              required: false
+              description: Optional name of artefact to download containing operator manifests. Must be uploaded prior to calling this workflow.
+            frontend-image:
+              type: string
+              required: false
+              default: ghcr.io/calyptia/frontend:main
+              description: docker image of calyptia/frontend
+            lua-sandbox-image:
+              type: string
+              required: false
+              default: ghcr.io/calyptia/cloud-lua-sandbox:latest
+              description: docker image of calyptia/cloud-lua-sandbox
+            fluentd-version:
+              type: string
+              required: false
+              default: v1.2-debian
+              description: fluentd image version to use from fluent/fluentd dockerhub.
+            ref:
+              description: The commit, tag or branch of this repository to checkout
+              type: string
+              required: false
+              default: refs/heads/main
+            calyptia-tests:
+              description: Path to tests to be executed
+              type: string
+              required: false
+            runner:
+              description: The runner to use for tests.
+              type: string
+              required: false
+              default: actuated-4cpu-16gb
+            k8s-distribution:
+              description: The K8S distribution to use for tests.
+              type: choice
+              options:
+                - 'kind'
+                - 'openshift'
+              default: kind
+              required: false
+jobs:
+    ci-e2e-tests:
+        uses: ./.github/workflows/call-integration-tests.yaml
+        with:
+          cli-version: v${{ inputs.cli-version }}
+          cli-image: v${{ inputs.cli-image }}
+          cloud-image: ghcr.io/calyptia/cloud:${{ inputs.cloud-version }}
+          core-image: ghcr.io/calyptia/core:${{ inputs.core-version }}
+          core-operator-image: ghcr.io/calyptia/core-operator:${{ inputs.core-operator-version }}
+          core-operator-from-cloud-image: ghcr.io/calyptia/core-operator/sync-from-cloud:${{ inputs.core-operator-version }}
+          core-operator-to-cloud-image: ghcr.io/calyptia/core-operator/sync-to-cloud:${{ inputs.core-operator-version }}
+          frontend-image: ${{ inputs.frontend-image }}
+          lua-sandbox-image: ${{ inputs.lua-sandbox-image }}
+          ref: ${{ inputs.ref }}
+          calyptia-tests: ${{ inputs.calyptia-tests }}
+          runner: ${{ inputs.runner }}
+          k8s-distribution: ${{ inputs.k8s-distribution }}
+        secrets:
+          registry-username: ${{ secrets.CI_USERNAME }}
+          registry-password: ${{ secrets.CI_PAT }}
+          # Replace with playground key after: https://app.asana.com/0/1205042382663691/1205231066738712/f
+          google-access-key: ${{ secrets.GCP_SA_KEY }}
+          github-token: ${{ secrets.CI_PAT }}
