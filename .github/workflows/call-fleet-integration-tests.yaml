@@ -139,7 +139,6 @@ jobs:
 
       - name: Run bats tests
         run: |
-          export PATH="${PATH}":${{ steps.calyptia-cli.outputs.path }}
           ./run-bats.sh ${{ inputs.calyptia-tests }}
         shell: bash
         timeout-minutes: 30
@@ -210,7 +209,6 @@ jobs:
       - name: Run bats tests
         shell: bash
         run: |
-          export PATH="${PATH}":${{ steps.calyptia-cli.outputs.path }}
           ./run-bats.sh ${{ inputs.calyptia-tests }}
         timeout-minutes: 30
         env:

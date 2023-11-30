@@ -27,7 +27,6 @@ jobs:
       core-operator-image: ghcr.io/calyptia/core-operator:${{ needs.ci-get-metadata.outputs.core-operator-version }}
       core-operator-from-cloud-image: ghcr.io/calyptia/core-operator/sync-from-cloud:${{ needs.ci-get-metadata.outputs.core-operator-version }}
       core-operator-to-cloud-image: ghcr.io/calyptia/core-operator/sync-to-cloud:${{ needs.ci-get-metadata.outputs.core-operator-version }}
-      calyptia-tests: "${{ matrix.testset }}/"
     secrets:
       registry-username: ${{ secrets.CI_USERNAME }}
       registry-password: ${{ secrets.CI_PAT }}
@@ -51,7 +50,6 @@ jobs:
       core-operator-image: ghcr.io/calyptia/core-operator:${{ needs.ci-get-metadata.outputs.core-operator-version }}
       core-operator-from-cloud-image: ghcr.io/calyptia/core-operator/sync-from-cloud:${{ needs.ci-get-metadata.outputs.core-operator-version }}
       core-operator-to-cloud-image: ghcr.io/calyptia/core-operator/sync-to-cloud:${{ needs.ci-get-metadata.outputs.core-operator-version }}
-      calyptia-tests: "${{ matrix.testset }}/"
       k8s-distribution: openshift
     secrets:
       registry-username: ${{ secrets.CI_USERNAME }}
