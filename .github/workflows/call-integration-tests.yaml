@@ -7,12 +7,12 @@
           type: string
           required: false
           default: latest
-          description: release version of the calyptia cli to use.
+          description: Release version of the calyptia cli to use, with the `v` prefix (release rather than numeric version)
         cli-image:
           type: string
           required: false
-          default: ghcr.io/calyptia/cli:main
-          description: CLI image to use.
+          default: ''
+          description: CLI image to use to extract a custom binary from, only use this for PRs or similar.
         cloud-image:
           type: string
           required: false
@@ -102,7 +102,6 @@
     AWS_EC2_METADATA_DISABLED: true
     FLUENTD_VERSION: ${{ inputs.fluentd-version }}
     CALYPTIA_CLI_VERSION: ${{ inputs.cli-version }}
-    CALYPTIA_CLI_IMAGE: ${{ inputs.cli-image }}
     CALYPTIA_CLOUD_IMAGE: ${{ inputs.cloud-image }}
     CALYPTIA_CORE_IMAGE: ${{ inputs.core-image }}
     CALYPTIA_CORE_OPERATOR_IMAGE: ${{ inputs.core-operator-image }}
@@ -159,6 +158,13 @@
             exit 1
           shell: bash
 
+        - name: Check CLI version or image is set
+          if: inputs.cli-image == '' && inputs.cli-version == ''
+          run: |
+            echo "Invalid CLI configuration detected"
+            exit 1
+          shell: bash
+
         - name: Success
           run: echo "Checks complete"
           shell: bash
@@ -198,12 +204,6 @@
         - name: Set up Actuated mirror
           if: contains(inputs.runner, 'actuated')
           uses: self-actuated/hub-mirror@master
-
-        # - name: Prep SSH access just in case
-        #   # https://github.com/mxschmitt/action-tmate#detached-mode
-        #   uses: mxschmitt/action-tmate@v3
-        #   with:
-        #     detached: true
 
         - name: Checkout the Code
           uses: actions/checkout@v4
@@ -313,6 +313,35 @@
             kind load docker-image $CALYPTIA_CORE_OPERATOR_FROM_CLOUD_IMAGE
           shell: bash
 
+        - name: Install custom CLI version
+          id: custom-cli-version
+          if: inputs.cli-image != ''
+          run: |
+            docker pull "$CALYPTIA_CLI_IMAGE"
+            docker image save "$CALYPTIA_CLI_IMAGE" | tar --extract --wildcards --to-stdout '*/layer.tar' | tar --extract --ignore-zeros --verbose --directory="/tmp" 'calyptia'
+            sudo mv /tmp/calyptia /usr/local/bin/calyptia
+            sudo chmod a+x /usr/local/bin/calyptia
+          shell: bash
+          env:
+            CALYPTIA_CLI_IMAGE: ${{ inputs.cli-image }}
+
+        - name: Install released CLI version
+          if: inputs.cli-image == ''
+          uses: engineerd/configurator@v0.0.10
+          with:
+            name: calyptia
+            version: ${{ inputs.cli-version }}
+            fromGitHubReleases: true
+            includePrereleases: false
+            repo: calyptia/cli
+            token: ${{ secrets.github-token }}
+            urlTemplate: https://github.com/calyptia/cli/releases/download/{{ version }}/cli_{{ rawVersion }}_linux_amd64.tar.gz
+            pathInArchive: calyptia
+
+        - name: Test version of CLI
+          run: calyptia version
+          shell: bash
+
         - name: Set up Cloud SDK
           uses: google-github-actions/setup-gcloud@v1
 
@@ -320,7 +349,7 @@
           run: |
             ./run-bats.sh ${{ inputs.calyptia-tests }}
           shell: bash
-          timeout-minutes: 30
+          timeout-minutes: 45
           env:
             REGISTRY_SERVER: ghcr.io
             REGISTRY_USERNAME: ${{ secrets.registry-username }}
@@ -403,6 +432,35 @@
           with:
             name: ${{ inputs.core-operator-crd-manifest }}
             path: override
+
+        - name: Install custom CLI version
+          id: custom-cli-version
+          if: inputs.cli-image != ''
+          run: |
+            docker pull "$CALYPTIA_CLI_IMAGE"
+            docker image save "$CALYPTIA_CLI_IMAGE" | tar --extract --wildcards --to-stdout '*/layer.tar' | tar --extract --ignore-zeros --verbose --directory="/tmp" 'calyptia'
+            sudo mv /tmp/calyptia /usr/local/bin/calyptia
+            sudo chmod a+x /usr/local/bin/calyptia
+          shell: bash
+          env:
+            CALYPTIA_CLI_IMAGE: ${{ inputs.cli-image }}
+
+        - name: Install released CLI version
+          if: inputs.cli-image == ''
+          uses: engineerd/configurator@v0.0.10
+          with:
+            name: calyptia
+            version: ${{ inputs.cli-version }}
+            fromGitHubReleases: true
+            includePrereleases: false
+            repo: calyptia/cli
+            token: ${{ secrets.github-token }}
+            urlTemplate: https://github.com/calyptia/cli/releases/download/{{ version }}/cli_{{ rawVersion }}_linux_amd64.tar.gz
+            pathInArchive: calyptia
+
+        - name: Test version of CLI
+          run: calyptia version
+          shell: bash
 
         - id: 'auth'
           uses: 'google-github-actions/auth@v2'
@@ -525,8 +583,8 @@
           shell: bash
           env:
             VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
+          timeout-minutes: 45
 
-          timeout-minutes: 30
         - name: Dump pod logs
           if: always()
           continue-on-error: true
