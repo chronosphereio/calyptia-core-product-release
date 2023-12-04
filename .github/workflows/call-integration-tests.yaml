@@ -118,7 +118,7 @@
       permissions: {}
       steps:
         - name: Invalid K8S distribution
-          if: ${{ inputs.k8s-distribution != 'kind' && inputs.k8s-distribution != 'openshift' }}
+          if: ${{ inputs.k8s-distribution != 'kind' && inputs.k8s-distribution != 'openshift' && inputs.k8s-distribution != 'vcluster' }}
           run: |
             echo "Invalid K8S distribution: ${{ inputs.k8s-distribution }}"
             exit 1
@@ -580,4 +580,110 @@
       steps:
         - name: Placeholder
           run: echo 'TBD'
+
+    run-integration-tests-vcluster:
+      if: inputs.k8s-distribution == 'vcluster' && contains(inputs.runner, 'ubuntu')
+      runs-on: ${{ inputs.runner }}
+      strategy:
+        fail-fast: false
+        matrix:
+          k8s-release: ${{ fromJSON(needs.get-versions.outputs.k8s-test-versions) }}
+      needs:
+        - verify-inputs
+        - get-versions
+      steps:
+        - name: Install dependencies
+          run: |
+            sudo apt-get update
+            sudo apt-get install -y netcat lsof parallel httpie jq time bc python3 python-is-python3 coreutils
+            curl -L -o vcluster "https://github.com/loft-sh/vcluster/releases/latest/download/vcluster-linux-amd64" && sudo install -c -m 0755 vcluster /usr/local/bin && rm -f vcluster
+          shell: bash
+
+        - name: Checkout the Code
+          uses: actions/checkout@v4
+          with:
+            repository: calyptia/cloud-e2e
+            ref: ${{ inputs.ref }}
+            # TODO: Swap over once everyone passing valid token
+            # token: ${{ secrets.github-token }}
+            token: ${{ secrets.registry-password }}
+
+        - name: Verify selected tests exist
+          if: inputs.calyptia-tests != ''
+          run: |
+            if [[ -d "./bats/${{ inputs.calyptia-tests }}" ]]; then
+              echo "Found test set: ${{ inputs.calyptia-tests }}"
+            else
+              echo "Unable to find test set: ${{ inputs.calyptia-tests }}"
+              exit 1
+            fi
+          shell: bash
+
+        - name: Download crd manifest
+          if: inputs.core-operator-crd-manifest != ''
+          uses: actions/download-artifact@v3
+          with:
+            name: ${{ inputs.core-operator-crd-manifest }}
+            path: override
+        - id: 'auth'
+          uses: 'google-github-actions/auth@v2'
+          with:
+            credentials_json: '${{ secrets.google-access-key }}'
+
+        - name: 'Set up Cloud SDK'
+          uses: 'google-github-actions/setup-gcloud@v1'
+          with:
+            install_components: 'gke-gcloud-auth-plugin'
+
+        - name: Authenticate with GKE cluster
+          run: |
+            gcloud container clusters get-credentials infra-cloud-mgt-cluster --zone us-east1 --project calyptia-infra
+
+        - name: Create vcluster
+          id: create-vcluster
+          run: |
+            # form a valid name
+            vcluster_name=$(echo "${{ matrix.k8s-release }}-${{ github.run_id }}-${{ strategy.job-index }}" | tr '[:upper:]' '[:lower:]' | sed -e 's/[^a-z0-9-]/-/g' -e 's/^[^a-z]/a&/')
+            echo "$vcluster_name" >> "${GITHUB_OUTPUT}"
+            # create vCluster
+            vcluster create "$vcluster_name" \
+            --set 'vcluster.image=rancher/k3s:${{ matrix.k8s-release }}'
+          continue-on-error: true
+
+        - name: Wait until vcluster is ready
+          id: wait-until-vcluster-is-ready
+          if: steps.create-vcluster.outcome == 'success'
+          run: |
+            set -x
+            kubectl wait --for=condition=ready pod -l app=${{ steps.create-vcluster.outputs.vcluster_name }} --timeout=300s
+          continue-on-error: true
+
+        - name: Delete vCluster in case vcluster fails to start and exit
+          if: steps.wait-until-vcluster-is-ready.outcome != 'success'
+          run: |
+            vcluster delete ${{ steps.create-vcluster.outputs.vcluster_name }}
+            exit 1
+
+        - name: Connect to vCluster
+          id: connect-to-vcluster
+          run: |
+            vcluster connect ${{ steps.create-vcluster.outputs.vcluster_name }} &
+
+        - name: Run bats tests
+          run: |
+            ./run-bats.sh ${{ inputs.calyptia-tests }}
+          shell: bash
+          timeout-minutes: 30
+          continue-on-error: true
+          env:
+            REGISTRY_SERVER: ghcr.io
+            REGISTRY_USERNAME: ${{ secrets.registry-username }}
+            REGISTRY_PASSWORD: ${{ secrets.registry-password }}
+            TEST_UID: ${{ github.repository }}-${{ github.run_id }}-${{ strategy.job-index }}
+
+        - name: Delete vCluster after tests
+          run: |
+            vcluster delete ${{ steps.create-vcluster.outputs.vcluster_name }}
+
+
 
