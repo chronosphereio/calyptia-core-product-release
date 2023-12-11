@@ -128,7 +128,7 @@ jobs:
           repo: calyptia/cli
           token: ${{ secrets.github-token }}
           urlTemplate: https://github.com/calyptia/cli/releases/download/{{ version }}/cli_{{ rawVersion }}_windows_amd64.tar.gz
-          pathInArchive: calyptia
+          pathInArchive: calyptia.exe
 
       - name: Checkout the Code
         uses: actions/checkout@v4
