@@ -343,7 +343,7 @@
           shell: bash
 
         - name: Set up Cloud SDK
-          uses: google-github-actions/setup-gcloud@v1
+          uses: google-github-actions/setup-gcloud@v2
 
         - name: Run bats tests
           run: |
@@ -468,7 +468,7 @@
             credentials_json: '${{ secrets.google-access-key }}'
 
         - name: 'Set up Cloud SDK'
-          uses: 'google-github-actions/setup-gcloud@v1'
+          uses: 'google-github-actions/setup-gcloud@v2'
 
         - name: Set up defaults
           run: |
