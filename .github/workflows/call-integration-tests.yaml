@@ -658,7 +658,7 @@
           if: steps.create-vcluster.outcome == 'success'
           run: |
             set -x
-            kubectl wait --for=condition=ready pod -l app=${{ steps.create-vcluster.outputs.vcluster_name }} --timeout=300s
+            kubectl wait --for=condition=ready pod -l release=${{ steps.create-vcluster.outputs.vcluster_name }} --timeout=300s
           continue-on-error: true
 
         - name: Delete vCluster in case vcluster fails to start and exit
