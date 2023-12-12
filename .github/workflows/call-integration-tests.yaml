@@ -167,6 +167,8 @@
       # permissions:
       #   contents: read
       uses: ./.github/workflows/get-versions.yaml
+      with:
+        ref: ${{ inputs.ref }}
 
     run-integration-tests-kind:
       if: inputs.k8s-distribution == 'kind' && !(contains(inputs.runner, 'mac') || contains(inputs.runner, 'windows'))
