@@ -587,7 +587,7 @@
       strategy:
         fail-fast: false
         matrix:
-          k8s-release: ${{ fromJSON(needs.get-versions.outputs.k8s-test-versions) }}
+          k8s-release: ${{ fromJSON(needs.get-versions.outputs.k3s-test-versions) }}
       needs:
         - verify-inputs
         - get-versions
@@ -644,7 +644,7 @@
           run: |
             # form a valid name
             vcluster_name=$(echo "${{ matrix.k8s-release }}-${{ github.run_id }}-${{ strategy.job-index }}" | tr '[:upper:]' '[:lower:]' | sed -e 's/[^a-z0-9-]/-/g' -e 's/^[^a-z]/a&/')
-            echo "$vcluster_name" >> "${GITHUB_OUTPUT}"
+            echo "vcluster_name=$vcluster_name" >> "${GITHUB_OUTPUT}"
             # create vCluster
             vcluster create "$vcluster_name" \
             --set 'vcluster.image=rancher/k3s:${{ matrix.k8s-release }}'

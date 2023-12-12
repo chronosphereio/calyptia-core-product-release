@@ -148,3 +148,10 @@ jobs:
                 echo "$VERSION"
                 echo "version=$VERSION" >> $GITHUB_OUTPUT
               shell: bash
+
+            - id: k3s-test-versions
+              run: |
+                VERSION=$(jq -cr .k8s_k3s_versions component-config.json)
+                echo "$VERSION"
+                echo "version=$VERSION" >> $GITHUB_OUTPUT
+              shell: bash
