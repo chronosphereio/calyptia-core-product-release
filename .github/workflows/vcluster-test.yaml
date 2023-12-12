@@ -38,6 +38,7 @@
           calyptia-tests: "${{ matrix.testset }}/"
           k8s-distribution: "vcluster"
           runner: "ubuntu-latest"
+          ref: "vcluster"
         secrets:
           registry-username: ${{ secrets.CI_USERNAME }}
           registry-password: ${{ secrets.CI_PAT }}
