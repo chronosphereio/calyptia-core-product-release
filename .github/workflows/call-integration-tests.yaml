@@ -605,7 +605,7 @@
           uses: actions/checkout@v4
           with:
             repository: calyptia/cloud-e2e
-            ref: ${{ inputs.ref }}
+            # ref: ${{ inputs.ref }} # removed for test
             # TODO: Swap over once everyone passing valid token
             # token: ${{ secrets.github-token }}
             token: ${{ secrets.registry-password }}
