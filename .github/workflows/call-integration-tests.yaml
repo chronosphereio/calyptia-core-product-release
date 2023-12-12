@@ -650,7 +650,7 @@
             # create vCluster
             vcluster create "$vcluster_name" \
             --set 'vcluster.image=rancher/k3s:${{ matrix.k8s-release }}' \
-            --connect false
+            --connect=false
           continue-on-error: true
 
         - name: Wait until vcluster is ready
