@@ -645,7 +645,7 @@
           id: create-vcluster
           run: |
             # form a valid name
-            vcluster_name=$(echo "${{ matrix.k8s-release }}-${{ github.run_id }}-${{ strategy.job-index }}" | tr '[:upper:]' '[:lower:]' | sed -e 's/[^a-z0-9-]/-/g' -e 's/^[^a-z]/a&/')
+            vcluster_name=$(echo "${{ matrix.k8s-release }}-${{ github.run_id }}-${{ strategy.job-index }}-${{ inputs.calyptia-tests }}" | tr '[:upper:]' '[:lower:]' | sed -e 's/[^a-z0-9-]/-/g' -e 's/^[^a-z]/a&/')
             echo "vcluster_name=$vcluster_name" >> "${GITHUB_OUTPUT}"
             # create vCluster
             vcluster create "$vcluster_name" \
@@ -658,7 +658,7 @@
           if: steps.create-vcluster.outcome == 'success'
           run: |
             set -x
-            kubectl wait --for=condition=ready pod -l release=${{ steps.create-vcluster.outputs.vcluster_name }} --timeout=300s
+            kubectl wait --for=condition=ready pod -l release=${{ steps.create-vcluster.outputs.vcluster_name }} --timeout=300s -A
           continue-on-error: true
 
         - name: Delete vCluster in case vcluster fails to start and exit
