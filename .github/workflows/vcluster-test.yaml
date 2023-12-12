@@ -11,6 +11,8 @@
     jobs:
       ci-get-metadata:
         uses: ./.github/workflows/get-versions.yaml
+        with:
+            ref: "vcluster"
     
       ci-e2e-tests:
         needs:
