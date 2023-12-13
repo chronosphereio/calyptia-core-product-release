@@ -736,10 +736,11 @@
             bats-version: 1.10.0
 
         - name: Run bats tests
+          id: run-bats-tests
           run: |
             ./run-bats.sh ${{ inputs.calyptia-tests }}
           shell: bash
-          timeout-minutes: 30
+          timeout-minutes: 40
           continue-on-error: true
           env:
             REGISTRY_SERVER: ghcr.io
@@ -750,6 +751,10 @@
         - name: Delete vCluster after tests
           run: |
             vcluster delete ${{ steps.create-vcluster.outputs.vcluster_name }}
+            if [ "${{ steps.run-bats-tests.outcome }}" != "success" ]; then
+              echo "Tests failed."
+              exit 1
+            fi
 
 
 
