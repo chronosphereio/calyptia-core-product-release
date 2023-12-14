@@ -195,9 +195,8 @@ jobs:
       - name: Set Architecture Package according to runner
         id: pkgarch
         run: |
-          echo -n "Runner architecture: "
-          uname -m
-          if [ "$(uname -m)" == "arm64" ]; then
+          echo "Runner architecture: $(uname -m)"
+          if [[ "$(uname -m)" == "arm64" ]]; then
             echo "Detected Apple Silicon"
             echo "brand=apple" >> "${GITHUB_OUTPUT}"
             echo "arch=arm64" >> "${GITHUB_OUTPUT}"
@@ -212,21 +211,21 @@ jobs:
         if: ${{ inputs.calyptia-package-artefact }}
         uses: actions/download-artifact@v3
         with:
-          name: ${{ inputs.calyptia-package-artefact }}
-          path: /tmp/fluent-bit
+          name: ${{ inputs.calyptia-package-artefact }}-${{ steps.pkgarch.outputs.brand }}
 
       - name: Download and Install Calyptia FluentBit LTS Package
         if: inputs.calyptia-lts-version != ''
         run: |
-          wget "${URL}" -O /tmp/fluent-bit/calyptia-fluent-bit.pkg
+          wget "${URL}" -O calyptia-fluent-bit.pkg
         shell: bash
         env:
           URL: ${{ inputs.calyptia-lts-repo }}/macos/${{ inputs.calyptia-lts-version }}/calyptia-fluent-bit-${{ inputs.calyptia-lts-version }}-${{ steps.pkgarch.outputs.brand }}.pkg
 
+      # Package or artefact are both downloaded to the same place to simplify installation with a single step
       - name: Install Calyptia Fluent Bit LTS Package
         id: pkginstall
         run: |
-          installer -pkg /tmp/fluent-bit/calyptia-fluent-bit.pkg -target CurrentUserHomeDirectory
+          installer -pkg calyptia-fluent-bit.pkg -target CurrentUserHomeDirectory
           # pkgutil --lsbom io.fluentbit.calyptia-fluent-bit.binary --volume $HOME
           echo "bin=${HOME}/./usr/local/bin/calyptia-fluent-bit" >> "${GITHUB_OUTPUT}"
         shell: bash
@@ -261,5 +260,5 @@ jobs:
           ./run-bats.sh ${{ inputs.calyptia-tests }}
         timeout-minutes: 30
         env:
-          TEST_UID: ${{ github.repository }}-${{ github.run_id }}-${{ strategy.job-index }}
+          TEST_UID: ${{ github.repository }}-${{ github.run_id }}-mac-fleet
           FLUENTBIT_BIN: ${{ steps.pkginstall.outputs.bin }}
