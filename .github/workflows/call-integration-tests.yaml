@@ -712,7 +712,7 @@
 
         - name: Authenticate with GKE cluster
           run: |
-            gcloud container clusters get-credentials ${{ inputs.gke-cluster-name }} --zone ${{ inputs.gke-cluster-name }} --project ${{ inputs.gke-cluster-project }}
+            gcloud container clusters get-credentials ${{ inputs.gke-cluster-name }} --zone ${{ inputs.gke-cluster-zone }} --project ${{ inputs.gke-cluster-project }}
 
         - name: Create vcluster
           id: create-vcluster
