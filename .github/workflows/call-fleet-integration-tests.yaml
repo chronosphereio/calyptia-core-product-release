@@ -244,10 +244,12 @@ jobs:
 
       - name: Test version of Fluent Bit
         run: |
-          calyptia-fluent-bit --version
-          calyptia-fluent-bit --help
+          $FLUENTBIT_BIN --version
+          $FLUENTBIT_BIN --help
         shell: bash
         timeout-minutes: 1
+        env:
+          FLUENTBIT_BIN: ${{ steps.pkginstall.outputs.bin }}
 
       - name: Test version of CLI
         run: calyptia version
