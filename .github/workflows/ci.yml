@@ -60,6 +60,7 @@ jobs:
       github-token: ${{ secrets.CI_PAT }}
 
   ci-fleet-tests:
+    if: contains(github.event.pull_request.labels.*.name, 'enable-fleet-tests')
     uses: ./.github/workflows/call-fleet-integration-tests.yaml
     strategy:
       fail-fast: false
@@ -67,7 +68,7 @@ jobs:
         testset:
           - fleet/cli
         runner:
-          # - macos-latest
+          - macos-latest
           - windows-latest
     with:
       calyptia-tests: "${{ matrix.testset }}/"

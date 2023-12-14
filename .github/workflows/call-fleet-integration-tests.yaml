@@ -108,9 +108,9 @@ jobs:
         if: ${{ inputs.calyptia-package-artefact }}
         # transform download-path into msys2 equivalent
         run: |
-            DP="/tmp/fluent-bit"
-            DP=$(echo $DP | sed 's/\([A-Za-z]\)\:/\l\1/' | sed 's/\\/\//g')
-            mv "/${DP}/"*.zip /tmp/calyptia-fluent-bit.zip
+          DP="/tmp/fluent-bit"
+          DP=$(echo $DP | sed 's/\([A-Za-z]\)\:/\l\1/' | sed 's/\\/\//g')
+          mv "/${DP}/"*.zip /tmp/calyptia-fluent-bit.zip
         shell: bash
 
       - name: Unzip Calyptia Package
@@ -171,42 +171,65 @@ jobs:
     needs:
       - verify-inputs
     steps:
+      - name: Checkout the Code
+        uses: actions/checkout@v4
+        with:
+          repository: calyptia/cloud-e2e
+          ref: ${{ inputs.ref }}
+          token: ${{ secrets.github-token }}
+
       - name: Install dependencies
         run: |
           # missing: time (reserved shell keyword)
           # brew update
           brew install netcat lsof parallel httpie bc coreutils
         shell: bash
+
       - uses: azure/setup-kubectl@v3
+
       - name: Install Bats
         uses: mig4/setup-bats@v1
         with:
           bats-version: 1.10.0
+
       - name: Set Architecture Package according to runner
         id: pkgarch
         run: |
           echo -n "Runner architecture: "
           uname -m
           if [ "$(uname -m)" == "arm64" ]; then
+            echo "Detected Apple Silicon"
             echo "brand=apple" >> "${GITHUB_OUTPUT}"
             echo "arch=arm64" >> "${GITHUB_OUTPUT}"
           else
+            echo "Detected Intel Silicon"
             echo "brand=intel" >> "${GITHUB_OUTPUT}"
             echo "arch=amd64" >> "${GITHUB_OUTPUT}"
           fi
-      # TODO: add package usage
-      - name: Download and Install Calyptia Fluent-Bit LTS Package
-        id: pkginstall
-        if: inputs.calyptia-lts-version != ''
         shell: bash
+
+      - name: Download Fluent-Bit Binary from Artefact
+        if: ${{ inputs.calyptia-package-artefact }}
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ inputs.calyptia-package-artefact }}
+          path: /tmp/fluent-bit
+
+      - name: Download and Install Calyptia FluentBit LTS Package
+        if: inputs.calyptia-lts-version != ''
         run: |
-          URL="${{ inputs.calyptia-lts-repo }}/macos"
-          URL="${URL}/${{ inputs.calyptia-lts-version }}"
-          URL="${URL}/calyptia-fluent-bit-${{ inputs.calyptia-lts-version }}-${{ steps.pkgarch.outputs.brand }}.pkg"
-          wget "${URL}" -O calyptia-fluent-bit.pkg
-          installer -pkg calyptia-fluent-bit.pkg -target CurrentUserHomeDirectory
+          wget "${URL}" -O /tmp/fluent-bit/calyptia-fluent-bit.pkg
+        shell: bash
+        env:
+          URL: ${{ inputs.calyptia-lts-repo }}/macos/${{ inputs.calyptia-lts-version }}/calyptia-fluent-bit-${{ inputs.calyptia-lts-version }}-${{ steps.pkgarch.outputs.brand }}.pkg
+
+      - name: Install Calyptia Fluent Bit LTS Package
+        id: pkginstall
+        run: |
+          installer -pkg /tmp/fluent-bit/calyptia-fluent-bit.pkg -target CurrentUserHomeDirectory
           # pkgutil --lsbom io.fluentbit.calyptia-fluent-bit.binary --volume $HOME
           echo "bin=${HOME}/./usr/local/bin/calyptia-fluent-bit" >> "${GITHUB_OUTPUT}"
+        shell: bash
 
       - name: Install CLI
         uses: engineerd/configurator@v0.0.10
@@ -220,12 +243,18 @@ jobs:
           urlTemplate: https://github.com/calyptia/cli/releases/download/v{{ version }}/cli_{{ rawVersion }}_darwin_${{ steps.pkgarch.outputs.arch }}.tar.gz
           pathInArchive: calyptia
 
-      - name: Checkout the Code
-        uses: actions/checkout@v4
-        with:
-          repository: calyptia/cloud-e2e
-          ref: ${{ inputs.ref }}
-          token: ${{ secrets.github-token }}
+      - name: Test version of Fluent Bit
+        run: |
+          calyptia-fluent-bit --version
+          calyptia-fluent-bit --help
+        shell: bash
+        timeout-minutes: 1
+
+      - name: Test version of CLI
+        run: calyptia version
+        shell: bash
+        timeout-minutes: 1
+
       - name: Run bats tests
         shell: bash
         run: |
