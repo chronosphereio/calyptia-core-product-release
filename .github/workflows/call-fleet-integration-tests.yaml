@@ -77,6 +77,13 @@ jobs:
     needs:
       - verify-inputs
     steps:
+      - name: Checkout the Code
+        uses: actions/checkout@v4
+        with:
+          repository: calyptia/cloud-e2e
+          ref: ${{ inputs.ref }}
+          token: ${{ secrets.github-token }}
+
       # missing: lsof, parallel, bc
       - name: Install dependencies
         run: |
@@ -90,10 +97,7 @@ jobs:
         with:
           bats-version: 1.10.0
 
-      # TODO: install from LTS repo: https://github.com/marketplace/actions/engineerd-configurator
-
       - name: Download Fluent-Bit Binary from Artefact
-        id: download
         if: ${{ inputs.calyptia-package-artefact }}
         uses: actions/download-artifact@v3
         with:
@@ -102,21 +106,38 @@ jobs:
 
       - name: Transform Download Path to MSYS2
         if: ${{ inputs.calyptia-package-artefact }}
-        shell: bash
         # transform download-path into msys2 equivalent
         run: |
-            DP="/tmp/fluent-bit"
-            DP=$(echo $DP | sed 's/\([A-Za-z]\)\:/\l\1/' | sed 's/\\/\//g')
-            mv "/${DP}/"*.zip /tmp/calyptia-fluent-bit.zip
+          DP="/tmp/fluent-bit"
+          DP=$(echo $DP | sed 's/\([A-Za-z]\)\:/\l\1/' | sed 's/\\/\//g')
+          mv "/${DP}/"*.zip /tmp/calyptia-fluent-bit.zip
+        shell: bash
 
       - name: Unzip Calyptia Package
         if: ${{ inputs.calyptia-package-artefact }}
-        shell: bash
-        id: pkginstall
         run: |
           unzip /tmp/calyptia-fluent-bit.zip -d /tmp
           mv /tmp/calyptia-fluent-bit-* /tmp/calyptia-fluent-bit
           echo "bin=/tmp/calyptia-fluent-bit/bin/calyptia-fluent-bit" >> "${GITHUB_OUTPUT}"
+        shell: bash
+
+      - name: Grab uploaded Fluent Bit binary
+        if: ${{ inputs.calyptia-lts-version != '' }}
+        uses: engineerd/configurator@v0.0.10
+        with:
+          name: calyptia-fluent-bit
+          version: ${{ inputs.calyptia-lts-version }}
+          fromGitHubReleases: false
+          # e.g. https://calyptia-lts-staging-standard.s3.amazonaws.com/windows/23.4.9/calyptia-fluent-bit-23.4.9-win64.zip
+          url: ${{ inputs.calyptia-lts-repo }}/windows/${{ inputs.calyptia-lts-version }}/calyptia-fluent-bit-${{ inputs.calyptia-lts-version }}-win64.zip
+          pathInArchive: calyptia-fluent-bit-${{ inputs.calyptia-lts-version }}-win64/bin/calyptia-fluent-bit.exe
+
+      - name: Test version of Fluent Bit
+        run: |
+          calyptia-fluent-bit --version
+          calyptia-fluent-bit --help
+        shell: bash
+        timeout-minutes: 1
 
       - name: Install CLI
         uses: engineerd/configurator@v0.0.10
@@ -130,21 +151,19 @@ jobs:
           urlTemplate: https://github.com/calyptia/cli/releases/download/{{ version }}/cli_{{ rawVersion }}_windows_amd64.tar.gz
           pathInArchive: calyptia.exe
 
-      - name: Checkout the Code
-        uses: actions/checkout@v4
-        with:
-          repository: calyptia/cloud-e2e
-          ref: ${{ inputs.ref }}
-          token: ${{ secrets.github-token }}
+      - name: Test version of CLI
+        run: calyptia version
+        shell: bash
+        timeout-minutes: 1
 
       - name: Run bats tests
         run: |
           ./run-bats.sh ${{ inputs.calyptia-tests }}
         shell: bash
-        timeout-minutes: 30
+        timeout-minutes: 40
         env:
-          TEST_UID: ${{ github.repository }}-${{ github.run_id }}-${{ strategy.job-index }}
-          FLUENTBIT_BIN: /tmp/calyptia-fluent-bit/bin/calyptia-fluent-bit
+          TEST_UID: ${{ github.repository }}-${{ github.run_id }}-win-fleet
+          FLUENTBIT_BIN: calyptia-fluent-bit
 
   run-integration-tests-macos:
     if: contains(inputs.runner, 'macos')
@@ -152,42 +171,64 @@ jobs:
     needs:
       - verify-inputs
     steps:
+      - name: Checkout the Code
+        uses: actions/checkout@v4
+        with:
+          repository: calyptia/cloud-e2e
+          ref: ${{ inputs.ref }}
+          token: ${{ secrets.github-token }}
+
       - name: Install dependencies
         run: |
           # missing: time (reserved shell keyword)
           # brew update
           brew install netcat lsof parallel httpie bc coreutils
         shell: bash
+
       - uses: azure/setup-kubectl@v3
+
       - name: Install Bats
         uses: mig4/setup-bats@v1
         with:
           bats-version: 1.10.0
+
       - name: Set Architecture Package according to runner
         id: pkgarch
         run: |
-          echo -n "Runner architecture: "
-          uname -m
-          if [ "$(uname -m)" == "arm64" ]; then
+          echo "Runner architecture: $(uname -m)"
+          if [[ "$(uname -m)" == "arm64" ]]; then
+            echo "Detected Apple Silicon"
             echo "brand=apple" >> "${GITHUB_OUTPUT}"
             echo "arch=arm64" >> "${GITHUB_OUTPUT}"
           else
+            echo "Detected Intel Silicon"
             echo "brand=intel" >> "${GITHUB_OUTPUT}"
             echo "arch=amd64" >> "${GITHUB_OUTPUT}"
           fi
-      # TODO: add package usage
-      - name: Download and Install Calyptia Fluent-Bit LTS Package
-        id: pkginstall
-        if: inputs.calyptia-lts-version != ''
         shell: bash
+
+      - name: Download Fluent-Bit Binary from Artefact
+        if: ${{ inputs.calyptia-package-artefact }}
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ inputs.calyptia-package-artefact }}-${{ steps.pkgarch.outputs.brand }}
+
+      - name: Download and Install Calyptia FluentBit LTS Package
+        if: inputs.calyptia-lts-version != ''
         run: |
-          URL="${{ inputs.calyptia-lts-repo }}/macos"
-          URL="${URL}/${{ inputs.calyptia-lts-version }}"
-          URL="${URL}/calyptia-fluent-bit-${{ inputs.calyptia-lts-version }}-${{ steps.pkgarch.outputs.brand }}.pkg"
           wget "${URL}" -O calyptia-fluent-bit.pkg
+        shell: bash
+        env:
+          URL: ${{ inputs.calyptia-lts-repo }}/macos/${{ inputs.calyptia-lts-version }}/calyptia-fluent-bit-${{ inputs.calyptia-lts-version }}-${{ steps.pkgarch.outputs.brand }}.pkg
+
+      # Package or artefact are both downloaded to the same place to simplify installation with a single step
+      - name: Install Calyptia Fluent Bit LTS Package
+        id: pkginstall
+        run: |
           installer -pkg calyptia-fluent-bit.pkg -target CurrentUserHomeDirectory
           # pkgutil --lsbom io.fluentbit.calyptia-fluent-bit.binary --volume $HOME
           echo "bin=${HOME}/./usr/local/bin/calyptia-fluent-bit" >> "${GITHUB_OUTPUT}"
+        shell: bash
 
       - name: Install CLI
         uses: engineerd/configurator@v0.0.10
@@ -198,20 +239,28 @@ jobs:
           includePrereleases: false
           repo: calyptia/cli
           token: ${{ secrets.github-token }}
-          urlTemplate: https://github.com/calyptia/cli/releases/download/v{{ version }}/cli_{{ rawVersion }}_darwin_${{ steps.pkgarch.outputs.arch }}.tar.gz
+          urlTemplate: https://github.com/calyptia/cli/releases/download/{{ version }}/cli_{{ rawVersion }}_darwin_${{ steps.pkgarch.outputs.arch }}.tar.gz
           pathInArchive: calyptia
 
-      - name: Checkout the Code
-        uses: actions/checkout@v4
-        with:
-          repository: calyptia/cloud-e2e
-          ref: ${{ inputs.ref }}
-          token: ${{ secrets.github-token }}
+      - name: Test version of Fluent Bit
+        run: |
+          $FLUENTBIT_BIN --version
+          $FLUENTBIT_BIN --help
+        shell: bash
+        timeout-minutes: 1
+        env:
+          FLUENTBIT_BIN: ${{ steps.pkginstall.outputs.bin }}
+
+      - name: Test version of CLI
+        run: calyptia version
+        shell: bash
+        timeout-minutes: 1
+
       - name: Run bats tests
         shell: bash
         run: |
           ./run-bats.sh ${{ inputs.calyptia-tests }}
         timeout-minutes: 30
         env:
-          TEST_UID: ${{ github.repository }}-${{ github.run_id }}-${{ strategy.job-index }}
+          TEST_UID: ${{ github.repository }}-${{ github.run_id }}-mac-fleet
           FLUENTBIT_BIN: ${{ steps.pkginstall.outputs.bin }}
