@@ -79,6 +79,21 @@
           #   - 'openshift'
           default: kind
           required: false
+        gke-cluster-name:
+          description: The GKE cluster to deploy vClusters.
+          type: string
+          required: false
+          default: infra-cloud-mgt-cluster
+        gke-cluster-zone:
+          description: The GKE cluster zone to deploy vClusters.
+          type: string
+          required: false
+          default: us-east1
+        gke-cluster-project:
+          description: The GKE cluster project to deploy vClusters.
+          type: string
+          required: false
+          default: calyptia-infra
       secrets:
         registry-username:
           description: ci username to use for login into container registry
@@ -697,7 +712,7 @@
 
         - name: Authenticate with GKE cluster
           run: |
-            gcloud container clusters get-credentials infra-cloud-mgt-cluster --zone us-east1 --project calyptia-infra
+            gcloud container clusters get-credentials ${{ inputs.gke-cluster-name }} --zone ${{ inputs.gke-cluster-name }} --project ${{ inputs.gke-cluster-project }}
 
         - name: Create vcluster
           id: create-vcluster
@@ -709,21 +724,35 @@
             vcluster create "$vcluster_name" \
             --set 'vcluster.image=rancher/k3s:${{ matrix.k8s-release }}' \
             --connect=false
-          continue-on-error: true
 
         - name: Wait until vcluster is ready
           id: wait-until-vcluster-is-ready
           if: steps.create-vcluster.outcome == 'success'
           run: |
-            set -x
-            kubectl wait --for=condition=ready pod -l release=${{ steps.create-vcluster.outputs.vcluster_name }} --timeout=300s -A
-          continue-on-error: true
-
-        - name: Delete vCluster in case vcluster fails to start and exit
-          if: steps.wait-until-vcluster-is-ready.outcome != 'success'
-          run: |
-            vcluster delete ${{ steps.create-vcluster.outputs.vcluster_name }}
-            exit 1
+            max_attempts=30
+            attempt=0
+            vcluster_name=${{ steps.create-vcluster.outputs.vcluster_name }}
+            status="Reached maximum attempts, vCluster is not ready."
+            
+            while [ $attempt -lt $max_attempts ]; do
+                output=$(kubectl get pods -l release=$vcluster_name -A -o jsonpath="{.items[*].status.conditions[?(@.type=='Ready')].status}")
+                
+                if echo "$output" | grep -q "True"; then
+                    status="vCluster is ready."
+                    break
+                fi
+            
+                if [ -z "$output" ]; then
+                    echo "No vCluster found yet, attempt $((attempt + 1))/$max_attempts. Waiting..."
+                else
+                    echo "vCluster not ready yet, attempt $((attempt + 1))/$max_attempts. Waiting..."
+                fi
+            
+                attempt=$((attempt + 1))
+                sleep 10
+            done
+            
+            echo "$status"
 
         - name: Connect to vCluster
           id: connect-to-vcluster
@@ -741,7 +770,6 @@
             ./run-bats.sh ${{ inputs.calyptia-tests }}
           shell: bash
           timeout-minutes: 40
-          continue-on-error: true
           env:
             REGISTRY_SERVER: ghcr.io
             REGISTRY_USERNAME: ${{ secrets.registry-username }}
@@ -749,12 +777,6 @@
             TEST_UID: ${{ github.repository }}-${{ github.run_id }}-${{ strategy.job-index }}
 
         - name: Delete vCluster after tests
+          if: always()
           run: |
             vcluster delete ${{ steps.create-vcluster.outputs.vcluster_name }}
-            if [ "${{ steps.run-bats-tests.outcome }}" != "success" ]; then
-              echo "Tests failed."
-              exit 1
-            fi
-
-
-
