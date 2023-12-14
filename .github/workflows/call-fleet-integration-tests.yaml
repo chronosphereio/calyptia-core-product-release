@@ -107,8 +107,7 @@ jobs:
         run: |
             DP="/tmp/fluent-bit"
             DP=$(echo $DP | sed 's/\([A-Za-z]\)\:/\l\1/' | sed 's/\\/\//g')
-            DP="/${DP}"
-            mv "${DP}/"*.zip /tmp/calyptia-fluent-bit.zip
+            mv "/${DP}/"*.zip /tmp/calyptia-fluent-bit.zip
 
       - name: Unzip Calyptia Package
         if: ${{ inputs.calyptia-package-artefact }}
@@ -129,7 +128,7 @@ jobs:
           repo: calyptia/cli
           token: ${{ secrets.github-token }}
           urlTemplate: https://github.com/calyptia/cli/releases/download/{{ version }}/cli_{{ rawVersion }}_windows_amd64.tar.gz
-          pathInArchive: calyptia
+          pathInArchive: calyptia.exe
 
       - name: Checkout the Code
         uses: actions/checkout@v4
