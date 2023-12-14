@@ -58,27 +58,26 @@ jobs:
       google-access-key: ${{ secrets.GCP_SA_KEY }}
       github-token: ${{ secrets.CI_PAT }}
 
-  # TODO: add fleet tests once ready
-  # ci-fleet-tests:
-  #   uses: ./.github/workflows/call-fleet-integration-tests.yaml
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       testset:
-  #         - fleet/cli
-  #       runner:
-  #         - macos-latest
-  #         - windows-latest
-  #   with:
-  #     calyptia-tests: "${{ matrix.testset }}/"
-  #     calyptia-lts-version: 23.10.2
-  #     runner: "${{ matrix.runner }}"
-  #     # # update to main when changes have been merged
-  #     # ref: pwhelan-fleet-e2e
-  #     calyptia-cloud-url: "https://cloud-api-dev.calyptia.com"
-  #   secrets:
-  #     github-token: ${{ secrets.CI_PAT }}
-  #     calyptia-cloud-token: ${{ secrets.CALYPTIA_CLOUD_TOKEN }}
+  ci-fleet-tests:
+    uses: ./.github/workflows/call-fleet-integration-tests.yaml
+    strategy:
+      fail-fast: false
+      matrix:
+        testset:
+          - fleet/cli
+        runner:
+          # - macos-latest
+          - windows-latest
+    with:
+      calyptia-tests: "${{ matrix.testset }}/"
+      calyptia-lts-version: 23.10.2
+      runner: "${{ matrix.runner }}"
+      # TODO: update to main when changes have been merged
+      ref: pwhelan-fleet-e2e
+      calyptia-cloud-url: "https://cloud-api-dev.calyptia.com"
+    secrets:
+      github-token: ${{ secrets.CI_PAT }}
+      calyptia-cloud-token: ${{ secrets.CALYPTIA_CLOUD_TOKEN }}
 
   ci-generate-reports:
     name: Generate SBOM and CVE reports for release

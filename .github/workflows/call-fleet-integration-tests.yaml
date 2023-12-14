@@ -93,7 +93,6 @@ jobs:
       # TODO: install from LTS repo: https://github.com/marketplace/actions/engineerd-configurator
 
       - name: Download Fluent-Bit Binary from Artefact
-        id: download
         if: ${{ inputs.calyptia-package-artefact }}
         uses: actions/download-artifact@v3
         with:
@@ -102,21 +101,31 @@ jobs:
 
       - name: Transform Download Path to MSYS2
         if: ${{ inputs.calyptia-package-artefact }}
-        shell: bash
         # transform download-path into msys2 equivalent
         run: |
             DP="/tmp/fluent-bit"
             DP=$(echo $DP | sed 's/\([A-Za-z]\)\:/\l\1/' | sed 's/\\/\//g')
             mv "/${DP}/"*.zip /tmp/calyptia-fluent-bit.zip
+        shell: bash
 
       - name: Unzip Calyptia Package
         if: ${{ inputs.calyptia-package-artefact }}
-        shell: bash
-        id: pkginstall
         run: |
           unzip /tmp/calyptia-fluent-bit.zip -d /tmp
           mv /tmp/calyptia-fluent-bit-* /tmp/calyptia-fluent-bit
           echo "bin=/tmp/calyptia-fluent-bit/bin/calyptia-fluent-bit" >> "${GITHUB_OUTPUT}"
+        shell: bash
+
+      - name: Grab uploaded Fluent Bit binary
+        if: ${{ inputs.calyptia-lts-version != '' }}
+        uses: engineerd/configurator@v0.0.10
+        with:
+          name: calyptia-fluent-bit
+          version: ${{ inputs.calyptia-lts-version }}
+          fromGitHubReleases: false
+          # e.g. https://calyptia-lts-staging-standard.s3.amazonaws.com/windows/23.4.9/calyptia-fluent-bit-23.4.9-win64.zip
+          urlTemplate: ${{ inputs.calyptia-lts-repo }}/windows/${{ inputs.calyptia-lts-version }}/calyptia-fluent-bit-${{ inputs.calyptia-lts-version }}-win64.zip
+          pathInArchive: calyptia-fluent-bit-.exe
 
       - name: Install CLI
         uses: engineerd/configurator@v0.0.10
@@ -141,10 +150,10 @@ jobs:
         run: |
           ./run-bats.sh ${{ inputs.calyptia-tests }}
         shell: bash
-        timeout-minutes: 30
+        timeout-minutes: 40
         env:
-          TEST_UID: ${{ github.repository }}-${{ github.run_id }}-${{ strategy.job-index }}
-          FLUENTBIT_BIN: /tmp/calyptia-fluent-bit/bin/calyptia-fluent-bit
+          TEST_UID: ${{ github.repository }}-${{ github.run_id }}-win-fleet
+          FLUENTBIT_BIN: calyptia-fluent-bit
 
   run-integration-tests-macos:
     if: contains(inputs.runner, 'macos')
