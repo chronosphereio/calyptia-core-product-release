@@ -130,7 +130,7 @@ jobs:
           fromGitHubReleases: false
           # e.g. https://calyptia-lts-staging-standard.s3.amazonaws.com/windows/23.4.9/calyptia-fluent-bit-23.4.9-win64.zip
           url: ${{ inputs.calyptia-lts-repo }}/windows/${{ inputs.calyptia-lts-version }}/calyptia-fluent-bit-${{ inputs.calyptia-lts-version }}-win64.zip
-          pathInArchive: calyptia-fluent-bit-.exe
+          pathInArchive: calyptia-fluent-bit-${{ inputs.calyptia-lts-version }}-win64/bin/calyptia-fluent-bit.exe
 
       - name: Install CLI
         uses: engineerd/configurator@v0.0.10
