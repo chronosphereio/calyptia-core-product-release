@@ -119,7 +119,18 @@ jobs:
           unzip /tmp/calyptia-fluent-bit.zip -d /tmp
           mv /tmp/calyptia-fluent-bit-* /tmp/calyptia-fluent-bit
           echo "bin=/tmp/calyptia-fluent-bit/bin/calyptia-fluent-bit" >> "${GITHUB_OUTPUT}"
-        shell: bash
+
+      - name: Install CLI
+        uses: engineerd/configurator@v0.0.10
+        with:
+          name: calyptia
+          version: ${{ inputs.calyptia-cli-version }}
+          fromGitHubReleases: true
+          includePrereleases: false
+          repo: calyptia/cli
+          token: ${{ secrets.github-token }}
+          urlTemplate: https://github.com/calyptia/cli/releases/download/{{ version }}/cli_{{ rawVersion }}_windows_amd64.tar.gz
+          pathInArchive: calyptia
 
       - name: Grab uploaded Fluent Bit binary
         if: ${{ inputs.calyptia-lts-version != '' }}
@@ -171,6 +182,55 @@ jobs:
     needs:
       - verify-inputs
     steps:
+      - name: Install dependencies
+        run: |
+          # missing: time (reserved shell keyword)
+          # brew update
+          brew install netcat lsof parallel httpie bc coreutils
+        shell: bash
+      - uses: azure/setup-kubectl@v3
+      - name: Install Bats
+        uses: mig4/setup-bats@v1
+        with:
+          bats-version: 1.10.0
+      - name: Set Architecture Package according to runner
+        id: pkgarch
+        run: |
+          echo -n "Runner architecture: "
+          uname -m
+          if [ "$(uname -m)" == "arm64" ]; then
+            echo "brand=apple" >> "${GITHUB_OUTPUT}"
+            echo "arch=arm64" >> "${GITHUB_OUTPUT}"
+          else
+            echo "brand=intel" >> "${GITHUB_OUTPUT}"
+            echo "arch=amd64" >> "${GITHUB_OUTPUT}"
+          fi
+      # TODO: add package usage
+      - name: Download and Install Calyptia Fluent-Bit LTS Package
+        id: pkginstall
+        if: inputs.calyptia-lts-version != ''
+        shell: bash
+        run: |
+          URL="${{ inputs.calyptia-lts-repo }}/macos"
+          URL="${URL}/${{ inputs.calyptia-lts-version }}"
+          URL="${URL}/calyptia-fluent-bit-${{ inputs.calyptia-lts-version }}-${{ steps.pkgarch.outputs.brand }}.pkg"
+          wget "${URL}" -O calyptia-fluent-bit.pkg
+          installer -pkg calyptia-fluent-bit.pkg -target CurrentUserHomeDirectory
+          # pkgutil --lsbom io.fluentbit.calyptia-fluent-bit.binary --volume $HOME
+          echo "bin=${HOME}/./usr/local/bin/calyptia-fluent-bit" >> "${GITHUB_OUTPUT}"
+
+      - name: Install CLI
+        uses: engineerd/configurator@v0.0.10
+        with:
+          name: calyptia
+          version: ${{ inputs.calyptia-cli-version }}
+          fromGitHubReleases: true
+          includePrereleases: false
+          repo: calyptia/cli
+          token: ${{ secrets.github-token }}
+          urlTemplate: https://github.com/calyptia/cli/releases/download/v{{ version }}/cli_{{ rawVersion }}_darwin_${{ steps.pkgarch.outputs.arch }}.tar.gz
+          pathInArchive: calyptia
+
       - name: Checkout the Code
         uses: actions/checkout@v4
         with:
