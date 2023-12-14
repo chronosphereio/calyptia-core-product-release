@@ -657,7 +657,7 @@
           run: echo 'TBD'
 
     run-integration-tests-vcluster:
-      if: inputs.k8s-distribution == 'vcluster' && contains(inputs.runner, 'ubuntu')
+      if: inputs.k8s-distribution == 'vcluster' && !(contains(inputs.runner, 'mac') || contains(inputs.runner, 'windows'))
       runs-on: ${{ inputs.runner }}
       strategy:
         fail-fast: false
