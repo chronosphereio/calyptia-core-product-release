@@ -132,6 +132,13 @@ jobs:
           url: ${{ inputs.calyptia-lts-repo }}/windows/${{ inputs.calyptia-lts-version }}/calyptia-fluent-bit-${{ inputs.calyptia-lts-version }}-win64.zip
           pathInArchive: calyptia-fluent-bit-${{ inputs.calyptia-lts-version }}-win64/bin/calyptia-fluent-bit.exe
 
+      - name: Test version of Fluent Bit
+        run: |
+          calyptia-fluent-bit --version
+          calyptia-fluent-bit --help
+        shell: bash
+        timeout-minutes: 1
+
       - name: Install CLI
         uses: engineerd/configurator@v0.0.10
         with:
@@ -143,6 +150,11 @@ jobs:
           token: ${{ secrets.github-token }}
           urlTemplate: https://github.com/calyptia/cli/releases/download/{{ version }}/cli_{{ rawVersion }}_windows_amd64.tar.gz
           pathInArchive: calyptia.exe
+
+      - name: Test version of CLI
+        run: calyptia version
+        shell: bash
+        timeout-minutes: 1
 
       - name: Run bats tests
         run: |
