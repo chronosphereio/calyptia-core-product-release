@@ -239,7 +239,7 @@ jobs:
           includePrereleases: false
           repo: calyptia/cli
           token: ${{ secrets.github-token }}
-          urlTemplate: https://github.com/calyptia/cli/releases/download/v{{ version }}/cli_{{ rawVersion }}_darwin_${{ steps.pkgarch.outputs.arch }}.tar.gz
+          urlTemplate: https://github.com/calyptia/cli/releases/download/{{ version }}/cli_{{ rawVersion }}_darwin_${{ steps.pkgarch.outputs.arch }}.tar.gz
           pathInArchive: calyptia
 
       - name: Test version of Fluent Bit
