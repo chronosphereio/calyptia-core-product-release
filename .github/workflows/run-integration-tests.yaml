@@ -75,4 +75,3 @@ jobs:
           # Replace with playground key after: https://app.asana.com/0/1205042382663691/1205231066738712/f
           google-access-key: ${{ secrets.GCP_SA_KEY }}
           github-token: ${{ secrets.CI_PAT }}
-          
