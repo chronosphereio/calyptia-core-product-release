@@ -37,30 +37,6 @@ on:
               required: false
               default: ghcr.io/calyptia/core-operator/sync-to-cloud:latest
               description: docker image of calyptia/core-operator
-            core-operator-crd-manifest:
-              type: string
-              required: false
-              description: Optional name of artefact to download containing operator manifests. Must be uploaded prior to calling this workflow.
-            frontend-image:
-              type: string
-              required: false
-              default: ghcr.io/calyptia/frontend:main
-              description: docker image of calyptia/frontend
-            lua-sandbox-image:
-              type: string
-              required: false
-              default: ghcr.io/calyptia/cloud-lua-sandbox:latest
-              description: docker image of calyptia/cloud-lua-sandbox
-            fluentd-version:
-              type: string
-              required: false
-              default: v1.2-debian
-              description: fluentd image version to use from fluent/fluentd dockerhub.
-            ref:
-              description: The commit, tag or branch of this repository to checkout
-              type: string
-              required: false
-              default: refs/heads/main
             calyptia-tests:
               description: Path to tests to be executed
               type: string
@@ -82,16 +58,14 @@ jobs:
     ci-e2e-tests:
         uses: ./.github/workflows/call-integration-tests.yaml
         with:
-          cli-version: v${{ inputs.cli-version }}
-          cli-image: v${{ inputs.cli-image }}
-          cloud-image: ghcr.io/calyptia/cloud:${{ inputs.cloud-version }}
-          core-image: ghcr.io/calyptia/core:${{ inputs.core-version }}
-          core-operator-image: ghcr.io/calyptia/core-operator:${{ inputs.core-operator-version }}
-          core-operator-from-cloud-image: ghcr.io/calyptia/core-operator/sync-from-cloud:${{ inputs.core-operator-version }}
-          core-operator-to-cloud-image: ghcr.io/calyptia/core-operator/sync-to-cloud:${{ inputs.core-operator-version }}
-          frontend-image: ${{ inputs.frontend-image }}
-          lua-sandbox-image: ${{ inputs.lua-sandbox-image }}
-          ref: ${{ inputs.ref }}
+          cli-version: ${{ inputs.cli-version }}
+          cli-image: ${{ inputs.cli-image }}
+          cloud-image: ${{ inputs.cloud-image }}
+          core-image: ${{ inputs.core-image }}
+          core-operator-image: ${{ inputs.core-operator-image }}
+          core-operator-from-cloud-image: ${{ inputs.core-operator-from-cloud-image }}
+          core-operator-to-cloud-image: ${{ inputs.core-operator-to-cloud-image }}
+          ref: ${{ github.ref }}
           calyptia-tests: ${{ inputs.calyptia-tests }}
           runner: ${{ inputs.runner }}
           k8s-distribution: ${{ inputs.k8s-distribution }}
