@@ -105,7 +105,7 @@ jobs:
         shell: bash
         # transform download-path into msys2 equivalent
         run: |
-            DP="${{ steps.download.outputs.download-path }}"
+            DP="/tmp/fluent-bit"
             DP=$(echo $DP | sed 's/\([A-Za-z]\)\:/\l\1/' | sed 's/\\/\//g')
             mv "/${DP}/"*.zip /tmp/calyptia-fluent-bit.zip
 
