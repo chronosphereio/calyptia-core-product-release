@@ -79,6 +79,21 @@
           #   - 'openshift'
           default: kind
           required: false
+        gke-cluster-name:
+          description: The GKE cluster to deploy vClusters.
+          type: string
+          required: false
+          default: infra-cloud-mgt-cluster
+        gke-cluster-zone:
+          description: The GKE cluster zone to deploy vClusters.
+          type: string
+          required: false
+          default: us-east1
+        gke-cluster-project:
+          description: The GKE cluster project to deploy vClusters.
+          type: string
+          required: false
+          default: calyptia-infra
       secrets:
         registry-username:
           description: ci username to use for login into container registry
@@ -117,7 +132,7 @@
       permissions: {}
       steps:
         - name: Invalid K8S distribution
-          if: ${{ inputs.k8s-distribution != 'kind' && inputs.k8s-distribution != 'openshift' }}
+          if: ${{ inputs.k8s-distribution != 'kind' && inputs.k8s-distribution != 'openshift' && inputs.k8s-distribution != 'vcluster' }}
           run: |
             echo "Invalid K8S distribution: ${{ inputs.k8s-distribution }}"
             exit 1
@@ -173,6 +188,8 @@
       # permissions:
       #   contents: read
       uses: ./.github/workflows/get-versions.yaml
+      with:
+        ref: ${{ inputs.ref }}
 
     run-integration-tests-kind:
       if: inputs.k8s-distribution == 'kind' && !(contains(inputs.runner, 'mac') || contains(inputs.runner, 'windows'))
@@ -639,3 +656,127 @@
         - name: Placeholder
           run: echo 'TBD'
 
+    run-integration-tests-vcluster:
+      if: inputs.k8s-distribution == 'vcluster' && !(contains(inputs.runner, 'mac') || contains(inputs.runner, 'windows'))
+      runs-on: ${{ inputs.runner }}
+      strategy:
+        fail-fast: false
+        matrix:
+          k8s-release: ${{ fromJSON(needs.get-versions.outputs.k3s-test-versions) }}
+      needs:
+        - verify-inputs
+        - get-versions
+      steps:
+        - name: Install dependencies
+          run: |
+            sudo apt-get update
+            sudo apt-get install -y netcat lsof parallel httpie jq time bc python3 python-is-python3 coreutils
+            curl -L -o vcluster "https://github.com/loft-sh/vcluster/releases/latest/download/vcluster-linux-amd64" && sudo install -c -m 0755 vcluster /usr/local/bin && rm -f vcluster
+          shell: bash
+
+        - name: Checkout the Code
+          uses: actions/checkout@v4
+          with:
+            repository: calyptia/cloud-e2e
+            # ref: ${{ inputs.ref }} # removed for test
+            # TODO: Swap over once everyone passing valid token
+            # token: ${{ secrets.github-token }}
+            token: ${{ secrets.registry-password }}
+
+        - name: Verify selected tests exist
+          if: inputs.calyptia-tests != ''
+          run: |
+            if [[ -d "./bats/${{ inputs.calyptia-tests }}" ]]; then
+              echo "Found test set: ${{ inputs.calyptia-tests }}"
+            else
+              echo "Unable to find test set: ${{ inputs.calyptia-tests }}"
+              exit 1
+            fi
+          shell: bash
+
+        - name: Download crd manifest
+          if: inputs.core-operator-crd-manifest != ''
+          uses: actions/download-artifact@v3
+          with:
+            name: ${{ inputs.core-operator-crd-manifest }}
+            path: override
+        - id: 'auth'
+          uses: 'google-github-actions/auth@v2'
+          with:
+            credentials_json: '${{ secrets.google-access-key }}'
+
+        - name: 'Set up Cloud SDK'
+          uses: 'google-github-actions/setup-gcloud@v1'
+          with:
+            install_components: 'gke-gcloud-auth-plugin'
+
+        - name: Authenticate with GKE cluster
+          run: |
+            gcloud container clusters get-credentials ${{ inputs.gke-cluster-name }} --zone ${{ inputs.gke-cluster-zone }} --project ${{ inputs.gke-cluster-project }}
+
+        - name: Create vcluster
+          id: create-vcluster
+          run: |
+            # form a valid name
+            vcluster_name=$(echo "${{ matrix.k8s-release }}-${{ github.run_id }}-${{ strategy.job-index }}" | tr '[:upper:]' '[:lower:]' | sed -e 's/[^a-z0-9-]/-/g' -e 's/^[^a-z]/a&/')
+            echo "vcluster_name=$vcluster_name" >> "${GITHUB_OUTPUT}"
+            # create vCluster
+            vcluster create "$vcluster_name" \
+            --set 'vcluster.image=rancher/k3s:${{ matrix.k8s-release }}' \
+            --connect=false
+
+        - name: Wait until vcluster is ready
+          id: wait-until-vcluster-is-ready
+          if: steps.create-vcluster.outcome == 'success'
+          run: |
+            max_attempts=30
+            attempt=0
+            vcluster_name=${{ steps.create-vcluster.outputs.vcluster_name }}
+            status="Reached maximum attempts, vCluster is not ready."
+            
+            while [ $attempt -lt $max_attempts ]; do
+                output=$(kubectl get pods -l release=$vcluster_name -A -o jsonpath="{.items[*].status.conditions[?(@.type=='Ready')].status}")
+                
+                if echo "$output" | grep -q "True"; then
+                    status="vCluster is ready."
+                    break
+                fi
+            
+                if [ -z "$output" ]; then
+                    echo "No vCluster found yet, attempt $((attempt + 1))/$max_attempts. Waiting..."
+                else
+                    echo "vCluster not ready yet, attempt $((attempt + 1))/$max_attempts. Waiting..."
+                fi
+            
+                attempt=$((attempt + 1))
+                sleep 10
+            done
+            
+            echo "$status"
+
+        - name: Connect to vCluster
+          id: connect-to-vcluster
+          run: |
+            vcluster connect ${{ steps.create-vcluster.outputs.vcluster_name }} &
+
+        - name: Setup BATS
+          uses: mig4/setup-bats@v1
+          with:
+            bats-version: 1.10.0
+
+        - name: Run bats tests
+          id: run-bats-tests
+          run: |
+            ./run-bats.sh ${{ inputs.calyptia-tests }}
+          shell: bash
+          timeout-minutes: 40
+          env:
+            REGISTRY_SERVER: ghcr.io
+            REGISTRY_USERNAME: ${{ secrets.registry-username }}
+            REGISTRY_PASSWORD: ${{ secrets.registry-password }}
+            TEST_UID: ${{ github.repository }}-${{ github.run_id }}-${{ strategy.job-index }}
+
+        - name: Delete vCluster after tests
+          if: always()
+          run: |
+            vcluster delete ${{ steps.create-vcluster.outputs.vcluster_name }}
