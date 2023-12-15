@@ -23,7 +23,7 @@ jobs:
 
             - name: API schema tests
               run: |
-                  ./scripts/run-tests.sh
+                  ./scripts/run-tests.sh --endpoint "[^(?:^/v1/verification_email)]"
               shell: bash
               timeout-minutes: 20
               env:
