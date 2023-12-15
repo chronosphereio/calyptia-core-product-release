@@ -1,0 +1,95 @@
+name: Composite action to debug cluster
+runs:
+  using: composite
+  steps:
+      - name: helm releases
+        continue-on-error: true
+        if: always()
+        run: |
+          helm list -A || true
+          echo '-------------------------------------------------------------------------------'
+        shell: bash
+
+      - name: simple debug cluster
+        continue-on-error: true
+        if: always()
+        run: |
+          kubectl get pods --all-namespaces || true
+          echo '-------------------------------------------------------------------------------'
+          kubectl describe pods --namespace "$CALYPTIA_NAMESPACE" || true
+          echo '-------------------------------------------------------------------------------'
+          kubectl cluster-info dump --all-namespaces || true
+          echo '-------------------------------------------------------------------------------'
+        shell: bash
+
+      - name: get token
+        continue-on-error: true
+        if: always()
+        run: |
+          kubectl get secrets -A || true
+          echo '-------------------------------------------------------------------------------'
+          kubectl get secret -n "$CALYPTIA_NAMESPACE" auth-secret -o jsonpath='{.data.token}'| base64 --decode
+          echo '-------------------------------------------------------------------------------'
+        shell: bash
+
+      - name: get pipelines
+        continue-on-error: true
+        if: always()
+        run: |
+          kubectl get pipeline -A || true
+          echo '-------------------------------------------------------------------------------'
+        shell: bash
+
+      - name: cluster dump
+        continue-on-error: true
+        if: always()
+        run: |
+          kubectl cluster-dump -A || true
+        shell: bash
+
+      - name: full debug cluster
+        continue-on-error: true
+        if: always()
+        run: |
+          kubectl cluster-info || true
+          echo '-------------------------------------------------------------------------------'
+          kubectl describe all -n "$CALYPTIA_NAMESPACE" || true
+          echo '-------------------------------------------------------------------------------'
+          kubectl get secrets -n "$CALYPTIA_NAMESPACE" || true
+          echo '-------------------------------------------------------------------------------'
+          kubectl describe serviceaccount default -n "$CALYPTIA_NAMESPACE" || true
+          echo '-------------------------------------------------------------------------------'
+          kubectl describe -n "$CALYPTIA_NAMESPACE" deployment/cloud-api || true
+          echo '-------------------------------------------------------------------------------'
+          kubectl logs -n "$CALYPTIA_NAMESPACE" deployment/cloud-api || true
+          echo '-------------------------------------------------------------------------------'
+          kubectl describe -n "$CALYPTIA_NAMESPACE" deployment/core || true
+          echo '-------------------------------------------------------------------------------'
+          kubectl logs -n "$CALYPTIA_NAMESPACE" deployment/core || true
+          echo '-------------------------------------------------------------------------------'
+          kubectl describe -n "$CALYPTIA_NAMESPACE" deployment/postgres || true
+          echo '-------------------------------------------------------------------------------'
+          kubectl logs -n "$CALYPTIA_NAMESPACE" deployment/postgres || true
+          echo '-------------------------------------------------------------------------------'
+          kubectl describe -n "$CALYPTIA_NAMESPACE" deployment/influxdb || true
+          echo '-------------------------------------------------------------------------------'
+          kubectl logs -n "$CALYPTIA_NAMESPACE" deployment/influxdb || true
+          echo '-------------------------------------------------------------------------------'
+          kubectl describe all -n "ingress-nginx" || true
+          echo '-------------------------------------------------------------------------------'
+        shell: bash
+
+      - name: list images in cluster
+        # Useful to ensure we grab everything
+        continue-on-error: true
+        if: always()
+        # https://kubernetes.io/docs/tasks/access-application-cluster/list-all-running-container-images/
+        run: |
+          docker images
+          echo '-------------------------------------------------------------------------------'
+          kubectl get pods --all-namespaces -o jsonpath="{.items[*].spec.containers[*].image}" |\
+            tr -s '[[:space:]]' '\n' |\
+            sort |\
+            uniq -c
+          echo '-------------------------------------------------------------------------------'
+        shell: bash
