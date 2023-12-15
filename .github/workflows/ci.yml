@@ -100,7 +100,6 @@ jobs:
       core-operator-to-cloud-image: ghcr.io/calyptia/core-operator/sync-to-cloud:${{ needs.ci-get-metadata.outputs.core-operator-version }}
       k8s-distribution: "vcluster"
       runner: "ubuntu-latest"
-      ref: "vcluster"
     secrets:
       registry-username: ${{ secrets.CI_USERNAME }}
       registry-password: ${{ secrets.CI_PAT }}
