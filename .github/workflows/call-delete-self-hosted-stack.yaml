@@ -1,0 +1,45 @@
+name: Reusable workflow to delete a self-hosted stack
+on:
+    workflow_call:
+        inputs:
+            calyptia-cloud-vm-name:
+              description: The name of the GCP VM to remove.
+              required: true
+              type: string
+            zone:
+                description: The GCP zone to use.
+                type: string
+                required: false
+                default: us-east1-c
+            project:
+                description: The GCP project to use.
+                type: string
+                required: false
+                default: calyptia-playground-371615
+        secrets:
+            gcp-credentials:
+                description: The GCP SA credentials to create the VM.
+                required: true
+jobs:
+    delete-gcp-stack:
+        name: Delete GCP VM with self-hosted stack
+        runs-on: ubuntu-latest
+        steps:
+            - id: 'auth'
+              uses: 'google-github-actions/auth@v2'
+              with:
+                credentials_json: ${{ secrets.gcp-credentials }}
+
+            - name: 'Set up Cloud SDK'
+              uses: 'google-github-actions/setup-gcloud@v1'
+
+            - name: Set up defaults
+              run: |
+                gcloud config set compute/zone '${{ inputs.zone }}'
+                gcloud config set project '${{ inputs.project }}'
+                gcloud info
+              shell: bash
+
+            - name: Delete GCP VM
+              run: gcloud compute instances delete "${{ inputs.calyptia-cloud-vm-name }}" -q 2>/dev/null || true
+              shell: bash
