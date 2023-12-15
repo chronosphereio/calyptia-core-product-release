@@ -99,7 +99,7 @@ jobs:
 
       - name: Download Fluent-Bit Binary from Artefact
         if: ${{ inputs.calyptia-package-artefact }}
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.calyptia-package-artefact }}
           path: /tmp/fluent-bit
@@ -209,7 +209,7 @@ jobs:
 
       - name: Download Fluent-Bit Binary from Artefact
         if: ${{ inputs.calyptia-package-artefact }}
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.calyptia-package-artefact }}-${{ steps.pkgarch.outputs.brand }}
 
