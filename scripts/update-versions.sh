@@ -30,7 +30,7 @@ for index in "${!products[@]}"; do
     echo "Updating $product=$version"
 
     # Does the product exist?
-    if ! grep -q "$product" ./component-config.json; then
+    if ! grep -q "$product" "$SCRIPT_DIR/../component-config.json"; then
         echo "Missing $product"
         exit 1
     fi
@@ -51,8 +51,8 @@ for index in "${!products[@]}"; do
     fi
 
     # Update the new file
-    jq ".versions.$product = \"$version\"" "$SCRIPT_DIR/component-config.json" | tee "$SCRIPT_DIR/component-config-new.json"
+    jq ".versions.$product = \"$version\"" "$SCRIPT_DIR/../component-config.json" | tee "$SCRIPT_DIR/../component-config-new.json"
 done
 
-mv -f "$SCRIPT_DIR/component-config-new.json" "$SCRIPT_DIR/component-config.json"
-cat "$SCRIPT_DIR/component-config.json"
+mv -f "$SCRIPT_DIR/../component-config-new.json" "$SCRIPT_DIR/../component-config.json"
+cat "$SCRIPT_DIR/../component-config.json"
