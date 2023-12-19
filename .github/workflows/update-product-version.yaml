@@ -39,7 +39,7 @@ jobs:
             - name: Sanitise product names
               id: sanitise
               run: |
-                BRANCH=${PRODUCT//,/_}
+                BRANCH=${PRODUCT//\,/_}
                 echo "branch=$BRANCH"
                 echo "branch=$BRANCH" >> GITHUB_OUTPUT
               shell: bash
