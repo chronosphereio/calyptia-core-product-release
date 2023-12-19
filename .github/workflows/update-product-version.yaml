@@ -3,11 +3,11 @@ on:
     workflow_call:
         inputs:
             product:
-                description: The JSON key for the product to update.
+                description: The JSON key(s) for the product(s) to update. Comma separated if more than one.
                 required: true
                 type: string
             version:
-                description: The numeric (no v- prefix) version to update to.
+                description: The numeric (no v- prefix) version(s) to update to. Comma separated if more than one and matching index in the product array.
                 required: true
                 type: string
         secrets:
@@ -19,54 +19,39 @@ on:
                 value: ${{ jobs.version-update.outputs.pr || '' }}
                 description: The PR created, if any, or an empty string.
 jobs:
-    version-checks:
-        name: Sanitise and check inputs
-        runs-on: ubuntu-latest
-        outputs:
-            version: ${{ steps.version.outputs.version }}
-            product: ${{ inputs.product }}
-        steps:
-            - uses: actions/checkout@v4
-              with:
-                token: ${{ secrets.token }}
-                repository: calyptia/core-product-release
-
-            - name: Check product exists
-              run: grep -q '${{ inputs.product }}' ./component-config.json
-              shell: bash
-
-            - name: Get numeric version only
-              id: version
-              run: |
-                VERSION=${{ inputs.version }}
-                # Handle stripping the v prefix if present
-                if [[ "$VERSION" =~ ^v?([0-9]+\.[0-9]+\.[0-9]+)$ ]] ; then
-                    VERSION=${BASH_REMATCH[1]}
-                    echo "Valid version string: $VERSION"
-                else
-                    echo "ERROR: Invalid semver string: $VERSION"
-                fi
-                echo "version=$VERSION" >> $GITHUB_OUTPUT
-              shell: bash
-
     version-update:
-        name: Update ${{ needs.version-checks.outputs.product }} to ${{ needs.version-checks.outputs.version }}
+        name: Update versions
         runs-on: ubuntu-latest
-        needs:
-            - version-checks
         outputs:
             pr: ${{ steps.cpr.outputs.pull-request-number || '' }}
         steps:
+            - name: Add dependencies
+              run: |
+                sudo apt-get update
+                sudo apt-get install -y jq
+              shell: bash
+
             - uses: actions/checkout@v4
               with:
                 token: ${{ secrets.token }}
                 repository: calyptia/core-product-release
 
-            - name: Update versions
+            - name: Sanitise product names
+              id: sanitise
               run: |
-                jq '.versions.${{ needs.version-checks.outputs.product }} = "${{ needs.version-checks.outputs.version }}"' ./component-config.json | tee ./component-config-new.json
-                mv -f ./component-config-new.json ./component-config.json
+                BRANCH=${PRODUCT//\,/_}
+                echo "branch=$BRANCH"
+                echo "branch=$BRANCH" >> GITHUB_OUTPUT
               shell: bash
+              env:
+                PRODUCT: ${{ inputs.product }}
+
+            - name: Update versions
+              run: ./scripts/update-versions.sh
+              shell: bash
+              env:
+                PRODUCTS: ${{ inputs.product }}
+                VERSIONS: ${{ inputs.version }}
 
             - name: Generate PR - runs all the tests
               id: cpr
@@ -76,7 +61,7 @@ jobs:
                 signoff: true
                 # Repeated calls will sit on top of each other to test as one until merged
                 # Only updates per product
-                branch: ci_update_versions_push_${{ needs.version-checks.outputs.product }}
+                branch: ci_update_versions_push_${{ steps.sanitise.outputs.branch }}
                 delete-branch: true
                 title: 'ci: update to latest Calyptia versions'
                 # We need workflows permission so have to use the CI_PAT
@@ -84,7 +69,7 @@ jobs:
                 labels: ci,automerge
                 body: |
                   Update Calyptia versions
-                  - ${{ needs.version-checks.outputs.product }} = "${{ needs.version-checks.outputs.version }}"
+                  - ${{ inputs.product }} = "${{ inputs.version }}"
 
                   Github info:
                   - Created by ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
