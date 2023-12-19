@@ -52,7 +52,7 @@ for index in "${!products[@]}"; do
 
     # Update the new file
     jq ".versions.$product = \"$version\"" "$SCRIPT_DIR/../component-config.json" | tee "$SCRIPT_DIR/../component-config-new.json"
+    mv -f "$SCRIPT_DIR/../component-config-new.json" "$SCRIPT_DIR/../component-config.json"
 done
 
-mv -f "$SCRIPT_DIR/../component-config-new.json" "$SCRIPT_DIR/../component-config.json"
 cat "$SCRIPT_DIR/../component-config.json"
