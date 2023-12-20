@@ -41,7 +41,7 @@ jobs:
               run: |
                 BRANCH=${PRODUCT//\,/_}
                 echo "branch=$BRANCH"
-                echo "branch=$BRANCH" >> GITHUB_OUTPUT
+                echo "branch=$BRANCH" >> $GITHUB_OUTPUT
               shell: bash
               env:
                 PRODUCT: ${{ inputs.product }}
