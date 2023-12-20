@@ -218,6 +218,21 @@
           if: contains(inputs.runner, 'actuated')
           uses: self-actuated/hub-mirror@master
 
+        - uses: alexellis/arkade-get@master
+          with:
+            crane: latest
+            print-summary: false
+
+        - name: Install vmmeter
+          run: |
+            ARCH=amd64
+            if [ "$(uname -m)" == "aarch64" ] ; then ARCH=arm64 ; fi
+            crane export --platform linux/$ARCH ghcr.io/openfaasltd/vmmeter:latest | sudo tar -xvf - -C /usr/local/bin
+          shell: bash
+
+        - uses: self-actuated/vmmeter-action@master
+          if: contains(inputs.runner, 'actuated')
+
         - name: Checkout the Code
           uses: actions/checkout@v4
           with:
@@ -731,25 +746,25 @@
             attempt=0
             vcluster_name=${{ steps.create-vcluster.outputs.vcluster_name }}
             status="Reached maximum attempts, vCluster is not ready."
-            
+
             while [ $attempt -lt $max_attempts ]; do
                 output=$(kubectl get pods -l release=$vcluster_name -A -o jsonpath="{.items[*].status.conditions[?(@.type=='Ready')].status}")
-                
+
                 if echo "$output" | grep -q "True"; then
                     status="vCluster is ready."
                     break
                 fi
-            
+
                 if [ -z "$output" ]; then
                     echo "No vCluster found yet, attempt $((attempt + 1))/$max_attempts. Waiting..."
                 else
                     echo "vCluster not ready yet, attempt $((attempt + 1))/$max_attempts. Waiting..."
                 fi
-            
+
                 attempt=$((attempt + 1))
                 sleep 10
             done
-            
+
             echo "$status"
 
         - name: Connect to vCluster
