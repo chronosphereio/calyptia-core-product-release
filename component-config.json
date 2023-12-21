@@ -9,7 +9,7 @@
     "configmap_reload": "0.11.1",
     "core_sidecar_ingest_check": "0.0.7",
     "frontend": "1.5.4",
-    "lua_sandbox": "2.3.0",
+    "lua_sandbox": "3.0.0",
     "lua_modules": "5.0.1"
   },
   "k8s_kind_versions": [
