@@ -110,7 +110,7 @@ jobs:
         run: |
           DP="/tmp/fluent-bit"
           DP=$(echo $DP | sed 's/\([A-Za-z]\)\:/\l\1/' | sed 's/\\/\//g')
-          mv "/${DP}/"*.zip /tmp/calyptia-fluent-bit.zip
+          mv "${DP}/"*.zip /tmp/calyptia-fluent-bit.zip
         shell: bash
 
       - name: Unzip Calyptia Package
