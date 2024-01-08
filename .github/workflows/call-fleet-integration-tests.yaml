@@ -99,6 +99,7 @@ jobs:
 
       - name: Download Fluent-Bit Binary from Artefact
         if: ${{ inputs.calyptia-package-artefact }}
+        id: download
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.calyptia-package-artefact }}
@@ -109,8 +110,8 @@ jobs:
         # transform download-path into msys2 equivalent
         run: |
           # This should use the output from the download step.
-          DP="/tmp/fluent-bit"
-          DP=$(echo $DP | sed 's/\([A-Za-z]\)\:/\l\1/' | sed 's/\\/\//g')
+          DP="${{ steps.download.outputs.download-path }}"
+          DP="/"$(echo $DP | sed 's/\([A-Za-z]\)\:/\l\1/' | sed 's/\\/\//g')
           mv "${DP}/"*.zip /tmp/calyptia-fluent-bit.zip
         shell: bash
 
