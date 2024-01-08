@@ -108,6 +108,7 @@ jobs:
         if: ${{ inputs.calyptia-package-artefact }}
         # transform download-path into msys2 equivalent
         run: |
+          # This should use the output from the download step.
           DP="/tmp/fluent-bit"
           DP=$(echo $DP | sed 's/\([A-Za-z]\)\:/\l\1/' | sed 's/\\/\//g')
           mv "${DP}/"*.zip /tmp/calyptia-fluent-bit.zip
