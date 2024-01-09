@@ -119,7 +119,8 @@ jobs:
         run: |
           unzip /tmp/calyptia-fluent-bit.zip -d /tmp
           mv /tmp/calyptia-fluent-bit-* /tmp/calyptia-fluent-bit
-          echo "bin=/tmp/calyptia-fluent-bit/bin/calyptia-fluent-bit" >> "${GITHUB_OUTPUT}"
+          echo "/tmp/calyptia-fluent-bit/bin/" \
+            >> "${GITHUB_PATH}"
         shell: bash
 
       - name: Grab uploaded Fluent Bit binary
