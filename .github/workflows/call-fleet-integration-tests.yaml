@@ -99,6 +99,7 @@ jobs:
 
       - name: Download Fluent-Bit Binary from Artefact
         if: ${{ inputs.calyptia-package-artefact }}
+        id: download
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.calyptia-package-artefact }}
@@ -107,18 +108,19 @@ jobs:
       - name: Transform Download Path to MSYS2
         if: ${{ inputs.calyptia-package-artefact }}
         # transform download-path into msys2 equivalent
-        run: |
-          DP="/tmp/fluent-bit"
-          DP=$(echo $DP | sed 's/\([A-Za-z]\)\:/\l\1/' | sed 's/\\/\//g')
-          mv "/${DP}/"*.zip /tmp/calyptia-fluent-bit.zip
         shell: bash
+        run: |
+          DP="${{ steps.download.outputs.download-path }}"
+          DP="/"$(echo $DP | sed 's/\([A-Za-z]\)\:/\l\1/' | sed 's/\\/\//g')
+          mv "${DP}/"*.zip /tmp/calyptia-fluent-bit.zip
 
       - name: Unzip Calyptia Package
         if: ${{ inputs.calyptia-package-artefact }}
         run: |
           unzip /tmp/calyptia-fluent-bit.zip -d /tmp
           mv /tmp/calyptia-fluent-bit-* /tmp/calyptia-fluent-bit
-          echo "bin=/tmp/calyptia-fluent-bit/bin/calyptia-fluent-bit" >> "${GITHUB_OUTPUT}"
+          echo "/tmp/calyptia-fluent-bit/bin/" \
+            >> "${GITHUB_PATH}"
         shell: bash
 
       - name: Grab uploaded Fluent Bit binary
