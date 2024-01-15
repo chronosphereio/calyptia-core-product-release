@@ -11,7 +11,7 @@ CALYPTIA_E2E_TEST_K8S_VERSION=${CALYPTIA_E2E_TEST_K8S_VERSION:?}
 CALYPTIA_E2E_TEST_CREATE_KIND_CLUSTER=${CALYPTIA_E2E_TEST_CREATE_KIND_CLUSTER:-}
 
 # Set this non-empty for Actuated runners
-CALYTPIA_CI_ACTUATED=${CALYTPIA_CI_ACTUATED:-}
+CALYPTIA_CI_ACTUATED=${CALYPTIA_CI_ACTUATED:-}
 
 # The following are required with vCluster mode:
 # CALYPTIA_E2E_TEST_VCLUSTER_NAME=${CALYPTIA_E2E_TEST_VCLUSTER_NAME:?}
@@ -180,7 +180,7 @@ function setupCluster() {
             if kind delete cluster &> /dev/null; then
                 echo "Deleted existing cluster"
             fi
-            if [[ -n "${CALYTPIA_CI_ACTUATED:-}" ]]; then
+            if [[ -n "${CALYPTIA_CI_ACTUATED:-}" ]]; then
                 kind create cluster --wait 300s --config /dev/stdin <<EOF
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4

@@ -204,6 +204,7 @@
             export CALYPTIA_E2E_TEST_REPO_DIR="$GITHUB_WORKSPACE/cloud-e2e"
             ./core-product-release/scripts/run-integration-tests.sh
           env:
+            CALYPTIA_CI_ACTUATED: ${{ (contains(inputs.runner, 'actuated') && 'true') || '' }}
             CALYPTIA_E2E_TEST_PLATFORM: ${{ inputs.k8s-distribution }}
             CALYPTIA_E2E_TEST_SET: ${{ inputs.calyptia-tests }}
             CALYPTIA_E2E_TEST_REPO_DIR: cloud-e2e
