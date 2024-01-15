@@ -110,7 +110,7 @@ function installDependencies() {
         chmod +x ./kubectl
         sudo mv ./kubectl /usr/local/bin/kubectl
     fi
-    kubectl version
+    kubectl version --client
 
     local test_platform="${CALYPTIA_E2E_TEST_PLATFORM:-kind}"
     if [[ "$test_platform" == "kind" ]]; then
