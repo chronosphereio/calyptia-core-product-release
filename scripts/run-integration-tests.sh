@@ -189,7 +189,7 @@ nodes:
       image: kindest/node:${CALYPTIA_E2E_TEST_K8S_VERSION:?}
 containerdConfigPatches:
     - |-
-    [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"]
+      [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"]
         endpoint = ["http://192.168.128.1:5000"]
 EOF
             else
