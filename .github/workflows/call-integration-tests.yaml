@@ -58,7 +58,7 @@
           default: v1.2-debian
           description: fluentd image version to use from fluent/fluentd dockerhub.
         ref:
-          description: The commit, tag or branch of this repository to checkout
+          description: The commit, tag or branch of the cloud-e2e repository to checkout
           type: string
           required: false
           default: refs/heads/main
@@ -117,6 +117,7 @@
     AWS_EC2_METADATA_DISABLED: true
     FLUENTD_VERSION: ${{ inputs.fluentd-version }}
     CALYPTIA_CLI_VERSION: ${{ inputs.cli-version }}
+    CALYPTIA_CLI_IMAGE: ${{ inputs.cli-image }}
     CALYPTIA_CLOUD_IMAGE: ${{ inputs.cloud-image }}
     CALYPTIA_CORE_IMAGE: ${{ inputs.core-image }}
     CALYPTIA_CORE_OPERATOR_IMAGE: ${{ inputs.core-operator-image }}
@@ -126,73 +127,14 @@
     GITHUB_TOKEN: ${{ secrets.github-token }}
 
   jobs:
-    verify-inputs:
-      name: Verify inputs
-      runs-on: ubuntu-latest
-      permissions: {}
-      steps:
-        - name: Invalid K8S distribution
-          if: ${{ inputs.k8s-distribution != 'kind' && inputs.k8s-distribution != 'openshift' && inputs.k8s-distribution != 'vcluster' }}
-          run: |
-            echo "Invalid K8S distribution: ${{ inputs.k8s-distribution }}"
-            exit 1
-          shell: bash
-
-        - name: Check for empty CALYPTIA_CLI_VERSION
-          if: inputs.cli-version == ''
-          run: |
-            echo "Invalid CALYPTIA_CLI_VERSION"
-            exit 1
-          shell: bash
-
-        - name: Check for empty CALYPTIA_CLOUD_IMAGE
-          if: inputs.cloud-image == ''
-          run: |
-            echo "Invalid CALYPTIA_CLOUD_IMAGE"
-            exit 1
-          shell: bash
-
-        - name: Check for empty CALYPTIA_CORE_OPERATOR_IMAGE
-          if: inputs.core-operator-image == ''
-          run: |
-            echo "Invalid CALYPTIA_CORE_OPERATOR_IMAGE"
-            exit 1
-          shell: bash
-
-        - name: Check for empty CALYPTIA_CORE_OPERATOR_FROM_CLOUD_IMAGE
-          if: inputs.core-operator-from-cloud-image == ''
-          run: |
-            echo "Invalid CALYPTIA_CORE_OPERATOR_FROM_CLOUD_IMAGE"
-            exit 1
-          shell: bash
-
-        - name: Check for empty CALYPTIA_CORE_OPERATOR_TO_CLOUD_IMAGE
-          if: inputs.core-operator-to-cloud-image == ''
-          run: |
-            echo "Invalid CALYPTIA_CORE_OPERATOR_TO_CLOUD_IMAGE"
-            exit 1
-          shell: bash
-
-        - name: Check CLI version or image is set
-          if: inputs.cli-image == '' && inputs.cli-version == ''
-          run: |
-            echo "Invalid CLI configuration detected"
-            exit 1
-          shell: bash
-
-        - name: Success
-          run: echo "Checks complete"
-          shell: bash
-
     get-versions:
       # permissions:
       #   contents: read
       uses: ./.github/workflows/get-versions.yaml
 
-    run-integration-tests-kind:
-      if: inputs.k8s-distribution == 'kind' && !(contains(inputs.runner, 'mac') || contains(inputs.runner, 'windows'))
+    run-integration-tests-linux:
+      if: (inputs.k8s-distribution == 'kind' || inputs.k8s-distribution == 'vcluster') && !(contains(inputs.runner, 'mac') || contains(inputs.runner, 'windows'))
       needs:
-        - verify-inputs
         - get-versions
       # permissions:
       #   # Needed for the debug SSH connection to Actuated
@@ -208,32 +150,16 @@
           k8s-release: ${{ fromJSON(needs.get-versions.outputs.k8s-test-versions) }}
       runs-on: ${{ inputs.runner || 'ubuntu-latest' }}
       steps:
-        - name: Install dependencies
-          run: |
-            sudo apt-get update
-            sudo apt-get install -y netcat lsof parallel httpie jq time bc python3 python-is-python3 coreutils
-          shell: bash
-
         - name: Set up Actuated mirror
           if: contains(inputs.runner, 'actuated')
           uses: self-actuated/hub-mirror@master
 
-        - uses: alexellis/arkade-get@master
+        - uses: actions/checkout@v4
           with:
-            crane: latest
-            print-summary: false
+            repository: calyptia/core-product-release
+            path: core-product-release
 
-        - name: Install vmmeter
-          run: |
-            ARCH=amd64
-            if [ "$(uname -m)" == "aarch64" ] ; then ARCH=arm64 ; fi
-            crane export --platform linux/$ARCH ghcr.io/openfaasltd/vmmeter:latest | sudo tar -xvf - -C /usr/local/bin
-          shell: bash
-
-        - uses: self-actuated/vmmeter-action@master
-          if: contains(inputs.runner, 'actuated')
-
-        - name: Checkout the Code
+        - name: Checkout the e2e test code
           uses: actions/checkout@v4
           with:
             repository: calyptia/cloud-e2e
@@ -241,24 +167,14 @@
             # TODO: Swap over once everyone passing valid token
             # token: ${{ secrets.github-token }}
             token: ${{ secrets.registry-password }}
-
-        - name: Verify selected tests exist
-          if: inputs.calyptia-tests != ''
-          run: |
-            if [[ -d "./bats/${{ inputs.calyptia-tests }}" ]]; then
-              echo "Found test set: ${{ inputs.calyptia-tests }}"
-            else
-              echo "Unable to find test set: ${{ inputs.calyptia-tests }}"
-              exit 1
-            fi
-          shell: bash
+            path: cloud-e2e
 
         - name: Download crd manifest
           if: inputs.core-operator-crd-manifest != ''
           uses: actions/download-artifact@v4
           with:
             name: ${{ inputs.core-operator-crd-manifest }}
-            path: override
+            path: cloud-e2e/override
 
         - name: Log in to the Container registry
           uses: docker/login-action@v3
@@ -267,38 +183,6 @@
             username: ${{ secrets.registry-username }}
             password: ${{ secrets.registry-password }}
 
-        - name: Create k8s Kind Cluster
-          if: ${{ ! contains(inputs.runner, 'actuated') }}
-          uses: helm/kind-action@v1.8.0
-          timeout-minutes: 5
-          with:
-            node_image: kindest/node:${{ matrix.k8s-release }}
-            cluster_name: kind
-            wait: 300s
-
-        - name: Install KIND
-          if: contains(inputs.runner, 'actuated')
-          uses: helm/kind-action@v1.8.0
-          with:
-            install_only: true
-
-        - name: Create KIND cluster using Actuated mirror
-          if: contains(inputs.runner, 'actuated')
-          timeout-minutes: 5
-          run: |
-            kind create cluster --wait 300s --config /dev/stdin <<EOF
-            kind: Cluster
-            apiVersion: kind.x-k8s.io/v1alpha4
-            nodes:
-              - role: control-plane
-                image: kindest/node:${{ matrix.k8s-release }}
-            containerdConfigPatches:
-              - |-
-                [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"]
-                  endpoint = ["http://192.168.128.1:5000"]
-            EOF
-          shell: bash
-
         - id: auth
           uses: google-github-actions/auth@v2
           with:
@@ -306,490 +190,34 @@
             export_environment_variables: true
             create_credentials_file: true
 
-        - name: Setup BATS
-          uses: mig4/setup-bats@v1
-          with:
-            bats-version: 1.10.0
-
-        - name: Deploy log forwarding to stdout for FB container
-          run: |
-            /bin/bash ./helpers/setup-log-forwarding.bash
-          shell: bash
-
-        - run: |
-            docker pull $CALYPTIA_CLOUD_IMAGE
-            kind load docker-image $CALYPTIA_CLOUD_IMAGE
-          shell: bash
-
-        - run: |
-            docker pull $CALYPTIA_CORE_IMAGE
-            kind load docker-image $CALYPTIA_CORE_IMAGE
-          shell: bash
-
-        - run: |
-            docker pull $CALYPTIA_CORE_OPERATOR_IMAGE
-            kind load docker-image $CALYPTIA_CORE_OPERATOR_IMAGE
-          shell: bash
-
-        - run: |
-            docker pull $CALYPTIA_CORE_OPERATOR_TO_CLOUD_IMAGE
-            kind load docker-image $CALYPTIA_CORE_OPERATOR_TO_CLOUD_IMAGE
-          shell: bash
-
-        - run: |
-            docker pull $CALYPTIA_CORE_OPERATOR_FROM_CLOUD_IMAGE
-            kind load docker-image $CALYPTIA_CORE_OPERATOR_FROM_CLOUD_IMAGE
-          shell: bash
-
-        - name: Install custom CLI version
-          id: custom-cli-version
-          if: inputs.cli-image != ''
-          run: |
-            docker pull "$CALYPTIA_CLI_IMAGE"
-            docker image save "$CALYPTIA_CLI_IMAGE" | tar --extract --wildcards --to-stdout '*/layer.tar' | tar --extract --ignore-zeros --verbose --directory="/tmp" 'calyptia'
-            sudo mv /tmp/calyptia /usr/local/bin/calyptia
-            sudo chmod a+x /usr/local/bin/calyptia
-          shell: bash
-          env:
-            CALYPTIA_CLI_IMAGE: ${{ inputs.cli-image }}
-
-        - name: Install released CLI version
-          if: inputs.cli-image == ''
-          uses: engineerd/configurator@v0.0.10
-          with:
-            name: calyptia
-            version: ${{ inputs.cli-version }}
-            fromGitHubReleases: true
-            includePrereleases: false
-            repo: calyptia/cli
-            token: ${{ secrets.github-token }}
-            urlTemplate: https://github.com/calyptia/cli/releases/download/{{ version }}/cli_{{ rawVersion }}_linux_amd64.tar.gz
-            pathInArchive: calyptia
-
-        - name: Test version of CLI
-          run: calyptia version
-          shell: bash
-
         - name: Set up Cloud SDK
           uses: google-github-actions/setup-gcloud@v2
 
-        - name: Run bats tests
+        - name: Set up vCluster name
+          id: get-vcluster-name
           run: |
-            ./run-bats.sh ${{ inputs.calyptia-tests }}
+            vcluster_name=$(echo "${{ matrix.k8s-release }}-${{ github.run_id }}-${{ strategy.job-index }}" | tr '[:upper:]' '[:lower:]' | sed -e 's/[^a-z0-9-]/-/g' -e 's/^[^a-z]/a&/')
+            echo "CALYPTIA_E2E_TEST_VCLUSTER_NAME=$vcluster_name"
+            echo "CALYPTIA_E2E_TEST_VCLUSTER_NAME=$vcluster_name" >> "${GITHUB_OUTPUT}"
           shell: bash
-          timeout-minutes: 45
-          env:
-            REGISTRY_SERVER: ghcr.io
-            REGISTRY_USERNAME: ${{ secrets.registry-username }}
-            REGISTRY_PASSWORD: ${{ secrets.registry-password }}
-            TEST_UID: ${{ github.repository }}-${{ github.run_id }}-${{ strategy.job-index }}
-
-        - name: Dump pod logs
-          if: always()
-          continue-on-error: true
-          run: |
-            ps afx
-            echo '-------------------------------------------------------------------------------'
-            kubectl cluster-info || true
-            echo '-------------------------------------------------------------------------------'
-            kubectl get ns || true
-            echo '-------------------------------------------------------------------------------'
-            kubectl get pods --all-namespaces || true
-            echo '-------------------------------------------------------------------------------'
-            kubectl describe all -n test || true
-            echo '-------------------------------------------------------------------------------'
-            kubectl get pods --all-namespaces -o wide --show-labels || true
-            export POD_NAME=$(kubectl get pods -l "app.kubernetes.io/name=fluent-bit,app.kubernetes.io/instance=fluent-bit" -o jsonpath="{.items[0].metadata.name}")
-            kubectl logs $POD_NAME
-            echo '-------------------------------------------------------------------------------'
-            wget https://raw.githubusercontent.com/johanhaleby/kubetail/master/kubetail
-            /bin/bash ./kubetail --follow false --previous false --colored-output false --namespace test || true
-            echo '-------------------------------------------------------------------------------'
-          shell: bash
-
-        - name: list images in cluster
-          # Useful to ensure we grab everything
-          continue-on-error: true
-          if: always()
-          # https://kubernetes.io/docs/tasks/access-application-cluster/list-all-running-container-images/
-          run: |
-            docker images
-            echo '-------------------------------------------------------------------------------'
-            kubectl get pods --all-namespaces -o jsonpath="{.items[*].spec.containers[*].image}" |\
-              tr -s '[[:space:]]' '\n' |\
-              sort |\
-              uniq -c
-            echo '-------------------------------------------------------------------------------'
-          shell: bash
-
-    run-integration-tests-openshift:
-      if: inputs.k8s-distribution == 'openshift' && !(contains(inputs.runner, 'mac') || contains(inputs.runner, 'windows'))
-      runs-on: ${{ inputs.runner }}
-      needs:
-        - verify-inputs
-      # permissions:
-      #   # Needed for the gcloud auth
-      #   id-token: write
-      #   contents: read
-      env:
-        IMAGE_FAMILY: test-calyptia-openshift-crc
-        IMAGE_USER: ubuntu
-      steps:
-        - name: Checkout the Code
-          uses: actions/checkout@v4
-          with:
-            repository: calyptia/cloud-e2e
-            ref: ${{ inputs.ref }}
-            token: ${{ secrets.github-token }}
-            path: cloud-e2e
-
-        - name: Verify selected tests exist
-          if: inputs.calyptia-tests != ''
-          run: |
-            if [[ -d "./cloud-e2e/bats/${{ inputs.calyptia-tests }}" ]]; then
-              echo "Found test set: ${{ inputs.calyptia-tests }}"
-            else
-              echo "Unable to find test set: ${{ inputs.calyptia-tests }}"
-              exit 1
-            fi
-          shell: bash
-
-        - name: Download crd manifest
-          if: inputs.core-operator-crd-manifest != ''
-          uses: actions/download-artifact@v4
-          with:
-            name: ${{ inputs.core-operator-crd-manifest }}
-            path: override
-
-        - name: Install custom CLI version
-          id: custom-cli-version
-          if: inputs.cli-image != ''
-          run: |
-            docker pull "$CALYPTIA_CLI_IMAGE"
-            docker image save "$CALYPTIA_CLI_IMAGE" | tar --extract --wildcards --to-stdout '*/layer.tar' | tar --extract --ignore-zeros --verbose --directory="/tmp" 'calyptia'
-            sudo mv /tmp/calyptia /usr/local/bin/calyptia
-            sudo chmod a+x /usr/local/bin/calyptia
-          shell: bash
-          env:
-            CALYPTIA_CLI_IMAGE: ${{ inputs.cli-image }}
-
-        - name: Install released CLI version
-          if: inputs.cli-image == ''
-          uses: engineerd/configurator@v0.0.10
-          with:
-            name: calyptia
-            version: ${{ inputs.cli-version }}
-            fromGitHubReleases: true
-            includePrereleases: false
-            repo: calyptia/cli
-            token: ${{ secrets.github-token }}
-            urlTemplate: https://github.com/calyptia/cli/releases/download/{{ version }}/cli_{{ rawVersion }}_linux_amd64.tar.gz
-            pathInArchive: calyptia
-
-        - name: Test version of CLI
-          run: calyptia version
-          shell: bash
-
-        - id: 'auth'
-          uses: 'google-github-actions/auth@v2'
-          with:
-            credentials_json: '${{ secrets.google-access-key }}'
-
-        - name: 'Set up Cloud SDK'
-          uses: 'google-github-actions/setup-gcloud@v2'
-
-        - name: Set up defaults
-          run: |
-            gcloud config set compute/zone us-east1-c
-            gcloud info
-          shell: bash
-
-        - name: Sanitise VM name
-          # Needs to match: (?:[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?)
-          id: get-vm-name
-          run: |
-            VM_NAME=${INPUT/calyptia\//}
-            VM_NAME=${VM_NAME//\//-}
-            VM_NAME=${VM_NAME//_/-}
-            VM_NAME=${VM_NAME:0:61}
-            echo "VM_NAME=$VM_NAME"
-            echo "VM_NAME=$VM_NAME" >> $GITHUB_OUTPUT
-          shell: bash
-          env:
-            INPUT: ${{ github.repository }}-${{ github.run_id }}-${{ inputs.calyptia-tests }}-ocp
-
-        - name: Wipe any exising VM
-          run: |
-            gcloud compute instances delete "$VM_NAME" -q || true
-          shell: bash
-          env:
-            VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
-
-        - name: Create VM
-          run: |
-            gcloud compute instances create "$VM_NAME" --image-family="$IMAGE_FAMILY" --enable-nested-virtualization --machine-type='c2-standard-8' --image-project=calyptia-infra --verbosity=debug
-            sleep 10
-          shell: bash
-          env:
-            VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
-
-        - name: Wait for VM
-          run: |
-            echo "Waiting for SSH access to $VM_NAME..."
-            until gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command="true" 2> /dev/null; do
-                echo -n '.'
-                sleep 5
-            done
-            echo
-            echo "Successfully connected to $VM_NAME"
-          shell: bash
-          env:
-            VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
-
-        - name: Rsync files to VM
-          run: |
-            gcloud compute scp --recurse ./cloud-e2e "$IMAGE_USER"@"$VM_NAME":~/cloud-e2e
-          shell: bash
-          env:
-            VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
-
-        - name: Copy manifest override
-          if: inputs.core-operator-crd-manifest != ''
-          run: |
-            gcloud compute scp --recurse ./override "$IMAGE_USER"@"$VM_NAME":~/override
-          shell: bash
-          env:
-            VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
-
-        - name: Start CRC
-          run: gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='crc start'
-          shell: bash
-          env:
-            VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
-
-        - name: Set up environment
-          run: |
-            echo "export REGISTRY_SERVER=$REGISTRY_SERVER" > ./.env
-            echo "export REGISTRY_USERNAME=$REGISTRY_USERNAME" >> ./.env
-            echo "export REGISTRY_PASSWORD=$REGISTRY_PASSWORD" >> ./.env
-            echo "export FLUENTD_VERSION=$FLUENTD_VERSION" >> ./.env
-            echo "export CALYPTIA_CLI_VERSION=$CALYPTIA_CLI_VERSION" >> ./.env
-            echo "export CALYPTIA_CLOUD_IMAGE=$CALYPTIA_CLOUD_IMAGE" >> ./.env
-            echo "export CALYPTIA_CORE_IMAGE=$CALYPTIA_CORE_IMAGE" >> ./.env
-            echo "export CALYPTIA_CORE_OPERATOR_IMAGE=$CALYPTIA_CORE_OPERATOR_IMAGE" >> ./.env
-            echo "export CALYPTIA_CORE_OPERATOR_FROM_CLOUD_IMAGE=$CALYPTIA_CORE_OPERATOR_FROM_CLOUD_IMAGE" >> ./.env
-            echo "export CALYPTIA_CORE_OPERATOR_TO_CLOUD_IMAGE=$CALYPTIA_CORE_OPERATOR_TO_CLOUD_IMAGE" >> ./.env
-            echo "export CALYPTIA_CORE_OPERATOR_CRD=$CALYPTIA_CORE_OPERATOR_CRD" >> ./.env
-            cat ./.env
-            gcloud compute scp ./.env "$IMAGE_USER"@"$VM_NAME":~/.env
-            gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='source ~/.env && set'
-          shell: bash
-          env:
-            REGISTRY_SERVER: ghcr.io
-            REGISTRY_USERNAME: ${{ secrets.registry-username }}
-            REGISTRY_PASSWORD: ${{ secrets.registry-password }}
-            TEST_UID: ${{ github.repository }}-${{ github.run_id }}
-            VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
-
-        - name: Add missing dependencies
-          run: |
-            gcloud compute ssh "$VM_NAME" -q --command='sudo apt-get update && sudo apt-get install -y unzip'
-          shell: bash
-          env:
-            VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
-
-        - name: Setup kubeconfig
-          run: |
-            gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='eval $(crc oc-env);oc login -u kubeadmin -p admin https://api.crc.testing:6443'
-          shell: bash
-          env:
-            VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
 
         - name: Run tests
-          run: |
-            gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='source ~/.env && ~/cloud-e2e/run-bats.sh ${{ inputs.calyptia-tests }}'
-          shell: bash
-          env:
-            VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
           timeout-minutes: 45
-
-        - name: Dump pod logs
-          if: always()
-          continue-on-error: true
           run: |
-            gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='ps afx'
-            echo '-------------------------------------------------------------------------------'
-            gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='kubectl cluster-info || true'
-            echo '-------------------------------------------------------------------------------'
-            gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='kubectl get ns || true'
-            echo '-------------------------------------------------------------------------------'
-            gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='kubectl get pods -A || true'
-            echo '-------------------------------------------------------------------------------'
-            gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='kubectl describe all -n test || true'
-            echo '-------------------------------------------------------------------------------'
-            gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='kubectl cluster-info dump --namespaces test || true'
-            echo '-------------------------------------------------------------------------------'
-          shell: bash
+            export CALYPTIA_E2E_TEST_REPO_DIR="$GITHUB_WORKSPACE/cloud-e2e"
+            ./core-product-release/scripts/run-integration-tests.sh
           env:
-            VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
-
-        - name: Stop CRC
-          run: gcloud compute ssh "$IMAGE_USER"@"$VM_NAME" -q --command='crc stop'
-          shell: bash
-          env:
-            VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
-
-        - name: Delete VM
-          if: always()
-          run: gcloud compute instances delete "$VM_NAME" -q || true
-          shell: bash
-          env:
-            VM_NAME: ${{ steps.get-vm-name.outputs.VM_NAME }}
-
-    run-integration-tests-windows:
-      if: contains(inputs.runner, 'windows')
-      runs-on: ${{ inputs.runner }}
-      needs:
-        - verify-inputs
-        - get-versions
-      steps:
-        - name: Placeholder
-          run: echo 'TBD'
-
-    run-integration-tests-macos:
-      # Covers both standard Github and Cirruslabs
-      # runner: macos-latest <- intel
-      # runner: ghcr.io/cirruslabs/macos-ventura-xcode:14 <- apple
-      if: contains(inputs.runner, 'macos')
-      runs-on: ${{ inputs.runner }}
-      needs:
-        - verify-inputs
-        - get-versions
-      steps:
-        - name: Placeholder
-          run: echo 'TBD'
-
-    run-integration-tests-vcluster:
-      if: inputs.k8s-distribution == 'vcluster' && !(contains(inputs.runner, 'mac') || contains(inputs.runner, 'windows'))
-      runs-on: ${{ inputs.runner }}
-      strategy:
-        fail-fast: false
-        matrix:
-          k8s-release: ${{ fromJSON(needs.get-versions.outputs.k3s-test-versions) }}
-      needs:
-        - verify-inputs
-        - get-versions
-      steps:
-        - name: Install dependencies
-          run: |
-            sudo apt-get update
-            sudo apt-get install -y netcat lsof parallel httpie jq time bc python3 python-is-python3 coreutils
-            curl -L -o vcluster "https://github.com/loft-sh/vcluster/releases/latest/download/vcluster-linux-amd64" && sudo install -c -m 0755 vcluster /usr/local/bin && rm -f vcluster
-          shell: bash
-
-        - name: Checkout the Code
-          uses: actions/checkout@v4
-          with:
-            repository: calyptia/cloud-e2e
-            # ref: ${{ inputs.ref }} # removed for test
-            # TODO: Swap over once everyone passing valid token
-            # token: ${{ secrets.github-token }}
-            token: ${{ secrets.registry-password }}
-
-        - name: Verify selected tests exist
-          if: inputs.calyptia-tests != ''
-          run: |
-            if [[ -d "./bats/${{ inputs.calyptia-tests }}" ]]; then
-              echo "Found test set: ${{ inputs.calyptia-tests }}"
-            else
-              echo "Unable to find test set: ${{ inputs.calyptia-tests }}"
-              exit 1
-            fi
-          shell: bash
-
-        - name: Download crd manifest
-          if: inputs.core-operator-crd-manifest != ''
-          uses: actions/download-artifact@v4
-          with:
-            name: ${{ inputs.core-operator-crd-manifest }}
-            path: override
-        - id: 'auth'
-          uses: 'google-github-actions/auth@v2'
-          with:
-            credentials_json: '${{ secrets.google-access-key }}'
-
-        - name: 'Set up Cloud SDK'
-          uses: 'google-github-actions/setup-gcloud@v2'
-          with:
-            install_components: 'gke-gcloud-auth-plugin'
-
-        - name: Authenticate with GKE cluster
-          run: |
-            gcloud container clusters get-credentials ${{ inputs.gke-cluster-name }} --zone ${{ inputs.gke-cluster-zone }} --project ${{ inputs.gke-cluster-project }}
-
-        - name: Create vcluster
-          id: create-vcluster
-          run: |
-            # form a valid name
-            vcluster_name=$(echo "${{ matrix.k8s-release }}-${{ github.run_id }}-${{ strategy.job-index }}" | tr '[:upper:]' '[:lower:]' | sed -e 's/[^a-z0-9-]/-/g' -e 's/^[^a-z]/a&/')
-            echo "vcluster_name=$vcluster_name" >> "${GITHUB_OUTPUT}"
-            # create vCluster
-            vcluster create "$vcluster_name" \
-            --set 'vcluster.image=rancher/k3s:${{ matrix.k8s-release }}' \
-            --connect=false
-
-        - name: Wait until vcluster is ready
-          id: wait-until-vcluster-is-ready
-          if: steps.create-vcluster.outcome == 'success'
-          run: |
-            max_attempts=30
-            attempt=0
-            vcluster_name=${{ steps.create-vcluster.outputs.vcluster_name }}
-            status="Reached maximum attempts, vCluster is not ready."
-
-            while [ $attempt -lt $max_attempts ]; do
-                output=$(kubectl get pods -l release=$vcluster_name -A -o jsonpath="{.items[*].status.conditions[?(@.type=='Ready')].status}")
-
-                if echo "$output" | grep -q "True"; then
-                    status="vCluster is ready."
-                    break
-                fi
-
-                if [ -z "$output" ]; then
-                    echo "No vCluster found yet, attempt $((attempt + 1))/$max_attempts. Waiting..."
-                else
-                    echo "vCluster not ready yet, attempt $((attempt + 1))/$max_attempts. Waiting..."
-                fi
-
-                attempt=$((attempt + 1))
-                sleep 10
-            done
-
-            echo "$status"
-
-        - name: Connect to vCluster
-          id: connect-to-vcluster
-          run: |
-            vcluster connect ${{ steps.create-vcluster.outputs.vcluster_name }} &
-
-        - name: Setup BATS
-          uses: mig4/setup-bats@v1
-          with:
-            bats-version: 1.10.0
-
-        - name: Run bats tests
-          id: run-bats-tests
-          run: |
-            ./run-bats.sh ${{ inputs.calyptia-tests }}
-          shell: bash
-          timeout-minutes: 40
-          env:
+            CALYPTIA_CI_ACTUATED: ${{ (contains(inputs.runner, 'actuated') && 'true') || '' }}
+            CALYPTIA_E2E_TEST_PLATFORM: ${{ inputs.k8s-distribution }}
+            CALYPTIA_E2E_TEST_SET: ${{ inputs.calyptia-tests }}
+            CALYPTIA_E2E_TEST_REPO_DIR: cloud-e2e
+            CALYPTIA_E2E_TEST_K8S_VERSION: ${{ matrix.k8s-release }}
+            CALYPTIA_E2E_TEST_VCLUSTER_NAME: ${{ steps.get-vcluster-name.outputs.CALYPTIA_E2E_TEST_VCLUSTER_NAME }}
+            CALYPTIA_E2E_TEST_GKE_CLUSTER_NAME: ${{ inputs.gke-cluster-name }}
+            CALYPTIA_E2E_TEST_GKE_CLUSTER_ZONE: ${{ inputs.gke-cluster-zone }}
+            CALYPTIA_E2E_TEST_GKE_CLUSTER_PROJECT: ${{ inputs.gke-cluster-project }}
             REGISTRY_SERVER: ghcr.io
             REGISTRY_USERNAME: ${{ secrets.registry-username }}
             REGISTRY_PASSWORD: ${{ secrets.registry-password }}
             TEST_UID: ${{ github.repository }}-${{ github.run_id }}-${{ strategy.job-index }}
 
-        - name: Delete vCluster after tests
-          if: always()
-          run: |
-            vcluster delete ${{ steps.create-vcluster.outputs.vcluster_name }}
