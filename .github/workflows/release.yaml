@@ -84,7 +84,7 @@ jobs:
           shell: bash
 
         - name: Repository Dispatch
-          uses: peter-evans/repository-dispatch@v2
+          uses: peter-evans/repository-dispatch@v3
           with:
             token: ${{ secrets.CI_PAT }}
             repository: ${{ matrix.repo }}
