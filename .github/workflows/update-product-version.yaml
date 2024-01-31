@@ -55,7 +55,7 @@ jobs:
 
             - name: Generate PR - runs all the tests
               id: cpr
-              uses: peter-evans/create-pull-request@v5
+              uses: peter-evans/create-pull-request@v6
               with:
                 commit-message: 'ci: update to latest versions'
                 signoff: true
