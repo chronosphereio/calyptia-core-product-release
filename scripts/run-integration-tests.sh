@@ -90,7 +90,7 @@ function validateInputs() {
 
 function installDependencies() {
     sudo apt-get update
-    sudo apt-get install -y netcat lsof parallel httpie jq time bc python3 python-is-python3 coreutils
+    sudo apt-get install -y netcat lsof parallel httpie jq time bc python3 python-is-python3 coreutils apt-transport-https ca-certificates gnupg curl sudo 
 
     if command -v bats &> /dev/null; then
         echo "Detected existing installation of BATS so not installing"
@@ -128,6 +128,16 @@ function installDependencies() {
         fi
     elif [[ "$test_platform" == "vcluster" ]]; then
         echo "Checking for vCluster dependencies"
+        if command -v gcloud &> /dev/null; then
+            echo "Detected existing gcloud installation, ensuring we have GKE auth if required"
+            gcloud components install gke-gcloud-auth-plugin
+        else
+            curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
+            echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+            sudo apt-get update
+            sudo apt-get install -y google-cloud-sdk-gke-gcloud-auth-plugin
+        fi
+
         if command -v vcluster &> /dev/null; then
             echo "vCluster already installed"
         else
