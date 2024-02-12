@@ -90,7 +90,7 @@ function validateInputs() {
 
 function installDependencies() {
     sudo apt-get update
-    sudo apt-get install -y netcat lsof parallel httpie jq time bc python3 python-is-python3 coreutils
+    sudo apt-get install -y netcat lsof parallel httpie jq time bc python3 python-is-python3 coreutils apt-transport-https ca-certificates gnupg curl sudo 
 
     if command -v bats &> /dev/null; then
         echo "Detected existing installation of BATS so not installing"
@@ -128,6 +128,16 @@ function installDependencies() {
         fi
     elif [[ "$test_platform" == "vcluster" ]]; then
         echo "Checking for vCluster dependencies"
+        if command -v gcloud &> /dev/null; then
+            echo "Detected existing gcloud installation, ensuring we have GKE auth if required"
+            gcloud components install gke-gcloud-auth-plugin
+        else
+            curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
+            echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+            sudo apt-get update
+            sudo apt-get install -y google-cloud-sdk-gke-gcloud-auth-plugin
+        fi
+
         if command -v vcluster &> /dev/null; then
             echo "vCluster already installed"
         else
@@ -220,6 +230,7 @@ EOF
     elif [[ "$test_platform" == "vcluster" ]]; then
         echo "vCluster setup"
         gcloud container clusters get-credentials "${CALYPTIA_E2E_TEST_GKE_CLUSTER_NAME:?}" --zone "${CALYPTIA_E2E_TEST_GKE_CLUSTER_ZONE:?}" --project "${CALYPTIA_E2E_TEST_GKE_CLUSTER_PROJECT:?}"
+        kubectl get ns
         # form a valid name
         local vcluster_name
         vcluster_name=$(echo "${CALYPTIA_E2E_TEST_VCLUSTER_NAME}" | tr '[:upper:]' '[:lower:]' | sed -e 's/[^a-z0-9-]/-/g' -e 's/^[^a-z]/a&/')
@@ -247,11 +258,13 @@ EOF
             fi
 
             attempt=$((attempt + 1))
+            kubectl get ns
+            kubectl get pods -A --show-labels
             sleep 10
         done
         echo "$status"
-
         vcluster connect "$vcluster_name" &
+        sleep 10
     else
         echo "Unknown cluster type"
         exit 1

@@ -147,7 +147,7 @@
         matrix:
           # Be aware the KIND and K8S image versions may need to be compatible
           # https://github.com/kubernetes-sigs/kind/releases/tag/v0.20.0
-          k8s-release: ${{ fromJSON(needs.get-versions.outputs.k8s-test-versions) }}
+          k8s-release: ${{ (inputs.k8s-distribution == 'vcluster' && fromJSON(needs.get-versions.outputs.k3s-test-versions)) || fromJSON(needs.get-versions.outputs.k8s-test-versions) }}
       runs-on: ${{ inputs.runner || 'ubuntu-latest' }}
       steps:
         - name: Set up Actuated mirror

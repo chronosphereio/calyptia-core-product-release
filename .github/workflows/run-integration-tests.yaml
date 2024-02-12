@@ -51,7 +51,7 @@ on:
               type: choice
               options:
                 - 'kind'
-                - 'openshift'
+                - 'vcluster'
               default: kind
               required: false
 jobs:
