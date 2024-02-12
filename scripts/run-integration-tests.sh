@@ -245,7 +245,6 @@ EOF
 
         while [ $attempt -lt $max_attempts ]; do
             output=$(kubectl get pods -l release="$vcluster_name" -A -o jsonpath="{.items[*].status.conditions[?(@.type=='Ready')].status}")
-            vcluster connect "$vcluster_name" &
 
             if echo "$output" | grep -q "True"; then
                 status="vCluster is ready."
@@ -264,6 +263,7 @@ EOF
             sleep 10
         done
         echo "$status"
+        vcluster connect "$vcluster_name" &
     else
         echo "Unknown cluster type"
         exit 1
