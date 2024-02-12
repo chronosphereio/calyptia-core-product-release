@@ -264,6 +264,7 @@ EOF
         done
         echo "$status"
         vcluster connect "$vcluster_name" &
+        sleep 10
     else
         echo "Unknown cluster type"
         exit 1
