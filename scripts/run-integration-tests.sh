@@ -244,21 +244,14 @@ EOF
         status="ERROR: Reached maximum attempts, vCluster is not ready."
 
         while [ $attempt -lt $max_attempts ]; do
-            vcluster connect "$vcluster_name" &
-            output=$(kubectl get pods -l release="$vcluster_name" -A -o jsonpath="{.items[*].status.conditions[?(@.type=='Ready')].status}")
-
-            if echo "$output" | grep -q "True"; then
+            if vcluster connect "$vcluster_name" ; then
                 status="vCluster is ready."
                 break
             fi
 
-            if [ -z "$output" ]; then
-                echo "No vCluster found yet, attempt $((attempt + 1))/$max_attempts. Waiting..."
-            else
-                echo "vCluster not ready yet, attempt $((attempt + 1))/$max_attempts. Waiting..."
-            fi
-
+            echo "vCluster not ready yet, attempt $((attempt + 1))/$max_attempts. Waiting..."
             attempt=$((attempt + 1))
+
             kubectl get ns
             kubectl get pods -A --show-labels
             sleep 10
