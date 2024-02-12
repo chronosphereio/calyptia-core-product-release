@@ -230,6 +230,7 @@ EOF
     elif [[ "$test_platform" == "vcluster" ]]; then
         echo "vCluster setup"
         gcloud container clusters get-credentials "${CALYPTIA_E2E_TEST_GKE_CLUSTER_NAME:?}" --zone "${CALYPTIA_E2E_TEST_GKE_CLUSTER_ZONE:?}" --project "${CALYPTIA_E2E_TEST_GKE_CLUSTER_PROJECT:?}"
+        kubectl get ns
         # form a valid name
         local vcluster_name
         vcluster_name=$(echo "${CALYPTIA_E2E_TEST_VCLUSTER_NAME}" | tr '[:upper:]' '[:lower:]' | sed -e 's/[^a-z0-9-]/-/g' -e 's/^[^a-z]/a&/')
@@ -243,6 +244,7 @@ EOF
         status="ERROR: Reached maximum attempts, vCluster is not ready."
 
         while [ $attempt -lt $max_attempts ]; do
+            vcluster connect "$vcluster_name" &
             output=$(kubectl get pods -l release="$vcluster_name" -A -o jsonpath="{.items[*].status.conditions[?(@.type=='Ready')].status}")
 
             if echo "$output" | grep -q "True"; then
@@ -257,11 +259,11 @@ EOF
             fi
 
             attempt=$((attempt + 1))
+            kubectl get ns
+            kubectl get pods -A --show-labels
             sleep 10
         done
         echo "$status"
-
-        vcluster connect "$vcluster_name" &
     else
         echo "Unknown cluster type"
         exit 1
