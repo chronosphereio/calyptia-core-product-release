@@ -56,7 +56,7 @@ jobs:
         steps:
             - uses: actions/checkout@v4
               with:
-                repository: calyptia/core-product-release
+                repository: chronosphereio/calyptia-core-product-release
                 ref: ${{ inputs.ref }}
 
             - name: Install dependencies
