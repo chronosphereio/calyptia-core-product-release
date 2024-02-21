@@ -71,7 +71,7 @@ jobs:
         contents: read
       strategy:
         matrix:
-          repo: ['calyptia/infra-gitops-configuration', 'calyptia/chart-cloud-standalone', 'calyptia/core-docs']
+          repo: ['calyptia/infra-gitops-configuration', 'calyptia/chart-cloud-standalone', 'chronosphereio/calyptia-core-docs']
       steps:
         - uses: actions/checkout@v4
 
@@ -123,7 +123,7 @@ jobs:
         - name: Checkout core docs repo
           uses: actions/checkout@v4
           with:
-            repository: calyptia/core-docs
+            repository: chronosphereio/calyptia-core-docs
             token: ${{ secrets.CI_PAT }}
 
         - name: Create or checkout branch

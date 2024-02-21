@@ -80,7 +80,7 @@ jobs:
     secrets:
       github-token: ${{ secrets.CI_PAT }}
       calyptia-cloud-token: ${{ secrets.CALYPTIA_CLOUD_TOKEN }}
-    
+
   ci-e2e-tests-vcluster:
     # remove if decide to replace kind tests
     if: contains(github.event.pull_request.labels.*.name, 'enable-vcluster-tests')

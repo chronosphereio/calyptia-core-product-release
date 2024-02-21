@@ -156,13 +156,13 @@
 
         - uses: actions/checkout@v4
           with:
-            repository: calyptia/core-product-release
+            repository: chronosphereio/calyptia-core-product-release
             path: core-product-release
 
         - name: Checkout the e2e test code
           uses: actions/checkout@v4
           with:
-            repository: calyptia/cloud-e2e
+            repository: chronosphereio/calyptia-cloud-e2e
             ref: ${{ inputs.ref }}
             # TODO: Swap over once everyone passing valid token
             # token: ${{ secrets.github-token }}

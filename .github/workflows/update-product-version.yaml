@@ -34,7 +34,7 @@ jobs:
             - uses: actions/checkout@v4
               with:
                 token: ${{ secrets.token }}
-                repository: calyptia/core-product-release
+                repository: chronosphereio/calyptia-core-product-release
 
             - name: Sanitise product names
               id: sanitise
