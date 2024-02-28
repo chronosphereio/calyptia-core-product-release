@@ -49,7 +49,6 @@ jobs:
               Release of Calyptia Core ${{ github.ref_name }}:
                 - CLI: ${{ needs.ci-get-metadata.outputs.cli-version }}
                 - Cloud: ${{ needs.ci-get-metadata.outputs.cloud-version }}
-                - Core: ${{ needs.ci-get-metadata.outputs.core-version }}
                 - Core Fluent Bit: ${{ needs.ci-get-metadata.outputs.core-fluent-bit-version }}
                 - Core Operator: ${{ needs.ci-get-metadata.outputs.core-operator-version }}
                 - Frontend: ${{ needs.ci-get-metadata.outputs.frontend-version }}
