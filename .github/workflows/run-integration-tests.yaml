@@ -17,11 +17,6 @@ on:
               required: false
               default: ghcr.io/calyptia/cloud:latest
               description: docker image of calyptia/cloud
-            core-image:
-              type: string
-              required: false
-              default: ghcr.io/calyptia/core:main
-              description: docker image of calyptia-core
             core-operator-image:
               type: string
               required: false
@@ -45,7 +40,7 @@ on:
               description: The runner to use for tests.
               type: string
               required: false
-              default: actuated-4cpu-16gb
+              default: ubuntu-latest-m
             k8s-distribution:
               description: The K8S distribution to use for tests.
               type: choice
@@ -61,7 +56,6 @@ jobs:
           cli-version: ${{ inputs.cli-version }}
           cli-image: ${{ inputs.cli-image }}
           cloud-image: ${{ inputs.cloud-image }}
-          core-image: ${{ inputs.core-image }}
           core-operator-image: ${{ inputs.core-operator-image }}
           core-operator-from-cloud-image: ${{ inputs.core-operator-from-cloud-image }}
           core-operator-to-cloud-image: ${{ inputs.core-operator-to-cloud-image }}

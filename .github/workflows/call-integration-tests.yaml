@@ -18,11 +18,6 @@
           required: false
           default: ghcr.io/calyptia/cloud:latest
           description: docker image of calyptia/cloud
-        core-image:
-          type: string
-          required: false
-          default: ghcr.io/calyptia/core:main
-          description: docker image of calyptia-core
         core-operator-image:
           type: string
           required: false
@@ -52,11 +47,6 @@
           required: false
           default: ghcr.io/calyptia/cloud-lua-sandbox:latest
           description: docker image of calyptia/cloud-lua-sandbox
-        fluentd-version:
-          type: string
-          required: false
-          default: v1.2-debian
-          description: fluentd image version to use from fluent/fluentd dockerhub.
         ref:
           description: The commit, tag or branch of the cloud-e2e repository to checkout
           type: string
@@ -70,13 +60,13 @@
           description: The runner to use for tests.
           type: string
           required: false
-          default: actuated-4cpu-16gb
+          default: ubuntu-latest-m
         k8s-distribution:
           description: The K8S distribution to use for tests.
           type: string
           # options:
           #   - 'kind'
-          #   - 'openshift'
+          #   - 'vcluster'
           default: kind
           required: false
         gke-cluster-name:
@@ -115,11 +105,9 @@
           required: false # TODO: switch over once done
   env:
     AWS_EC2_METADATA_DISABLED: true
-    FLUENTD_VERSION: ${{ inputs.fluentd-version }}
     CALYPTIA_CLI_VERSION: ${{ inputs.cli-version }}
     CALYPTIA_CLI_IMAGE: ${{ inputs.cli-image }}
     CALYPTIA_CLOUD_IMAGE: ${{ inputs.cloud-image }}
-    CALYPTIA_CORE_IMAGE: ${{ inputs.core-image }}
     CALYPTIA_CORE_OPERATOR_IMAGE: ${{ inputs.core-operator-image }}
     CALYPTIA_CORE_OPERATOR_FROM_CLOUD_IMAGE: ${{ inputs.core-operator-from-cloud-image }}
     CALYPTIA_CORE_OPERATOR_TO_CLOUD_IMAGE: ${{ inputs.core-operator-to-cloud-image }}
