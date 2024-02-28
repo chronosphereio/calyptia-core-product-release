@@ -17,8 +17,6 @@ on:
                 value: ${{ jobs.get-version.outputs.cloud-e2e-version }}
             core-fluent-bit-version:
                 value: ${{ jobs.get-version.outputs.core-fluent-bit-version }}
-            core-version:
-                value: ${{ jobs.get-version.outputs.core-version }}
             core-operator-version:
                 value: ${{ jobs.get-version.outputs.core-operator-version }}
             configmap-reload-version:
@@ -45,7 +43,6 @@ jobs:
             cloud-version: ${{ steps.cloud-version.outputs.version }}
             cloud-e2e-version: ${{ steps.cloud-e2e-version.outputs.version }}
             core-fluent-bit-version: ${{ steps.core-fluent-bit-version.outputs.version }}
-            core-version: ${{ steps.core-version.outputs.version }}
             core-operator-version: ${{ steps.core-operator-version.outputs.version }}
             configmap-reload-version: ${{ steps.configmap-reload-version.outputs.version }}
             frontend-version: ${{ steps.frontend-version.outputs.version }}
@@ -93,14 +90,6 @@ jobs:
               continue-on-error: true
               run: |
                 VERSION=$(jq -cr .versions.core_fluent_bit component-config.json)
-                echo "$VERSION"
-                echo "version=$VERSION" >> $GITHUB_OUTPUT
-              shell: bash
-
-            - id: core-version
-              continue-on-error: true
-              run: |
-                VERSION=$(jq -cr .versions.core component-config.json)
                 echo "$VERSION"
                 echo "version=$VERSION" >> $GITHUB_OUTPUT
               shell: bash
