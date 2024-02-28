@@ -58,10 +58,10 @@ jobs:
                 helm repo add calyptia https://helm.calyptia.com --force-update
                 helm repo update
                 helm upgrade --install core-instance calyptia/core-instance \
-                --set cloudToken="${CALYPTIA_CLOUD_TOKEN}" \
-                --set cloudUrl="${CALYPTIA_CLOUD_URL}" \
-                --set coreInstance=test \
-                --debug --wait
+                    --set cloudToken="${CALYPTIA_CLOUD_TOKEN}" \
+                    --set cloudUrl="${CALYPTIA_CLOUD_URL}" \
+                    --set coreInstance=test \
+                    --debug --wait
               shell: bash
 
             - uses: ./.github/actions/debug-cluster/

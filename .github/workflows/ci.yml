@@ -24,7 +24,6 @@ jobs:
     with:
       cli-version: v${{ needs.ci-get-metadata.outputs.cli-version }}
       cloud-image: ghcr.io/calyptia/cloud:${{ needs.ci-get-metadata.outputs.cloud-version }}
-      core-image: ghcr.io/calyptia/core:${{ needs.ci-get-metadata.outputs.core-version }}
       core-operator-image: ghcr.io/calyptia/core-operator:${{ needs.ci-get-metadata.outputs.core-operator-version }}
       core-operator-from-cloud-image: ghcr.io/calyptia/core-operator/sync-from-cloud:${{ needs.ci-get-metadata.outputs.core-operator-version }}
       core-operator-to-cloud-image: ghcr.io/calyptia/core-operator/sync-to-cloud:${{ needs.ci-get-metadata.outputs.core-operator-version }}
@@ -47,7 +46,6 @@ jobs:
     with:
       cli-version: v${{ needs.ci-get-metadata.outputs.cli-version }}
       cloud-image: ghcr.io/calyptia/cloud:${{ needs.ci-get-metadata.outputs.cloud-version }}
-      core-image: ghcr.io/calyptia/core:${{ needs.ci-get-metadata.outputs.core-version }}
       core-operator-image: ghcr.io/calyptia/core-operator:${{ needs.ci-get-metadata.outputs.core-operator-version }}
       core-operator-from-cloud-image: ghcr.io/calyptia/core-operator/sync-from-cloud:${{ needs.ci-get-metadata.outputs.core-operator-version }}
       core-operator-to-cloud-image: ghcr.io/calyptia/core-operator/sync-to-cloud:${{ needs.ci-get-metadata.outputs.core-operator-version }}
@@ -94,7 +92,6 @@ jobs:
     with:
       cli-version: v${{ needs.ci-get-metadata.outputs.cli-version }}
       cloud-image: ghcr.io/calyptia/cloud:${{ needs.ci-get-metadata.outputs.cloud-version }}
-      core-image: ghcr.io/calyptia/core:${{ needs.ci-get-metadata.outputs.core-version }}
       core-operator-image: ghcr.io/calyptia/core-operator:${{ needs.ci-get-metadata.outputs.core-operator-version }}
       core-operator-from-cloud-image: ghcr.io/calyptia/core-operator/sync-from-cloud:${{ needs.ci-get-metadata.outputs.core-operator-version }}
       core-operator-to-cloud-image: ghcr.io/calyptia/core-operator/sync-to-cloud:${{ needs.ci-get-metadata.outputs.core-operator-version }}

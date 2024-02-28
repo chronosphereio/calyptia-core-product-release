@@ -216,9 +216,6 @@ EOF
         docker pull "$CALYPTIA_CLOUD_IMAGE"
         kind load docker-image "$CALYPTIA_CLOUD_IMAGE"
 
-        docker pull "$CALYPTIA_CORE_IMAGE"
-        kind load docker-image "$CALYPTIA_CORE_IMAGE"
-
         docker pull "$CALYPTIA_CORE_OPERATOR_IMAGE"
         kind load docker-image "$CALYPTIA_CORE_OPERATOR_IMAGE"
 
