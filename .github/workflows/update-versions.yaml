@@ -19,10 +19,6 @@ on:
         description: The new Core Fluent Bit version to use, no v prefix.
         required: true
         type: string
-      core-version:
-        description: The new Core version to use, no v prefix.
-        required: true
-        type: string
       core-operator-version:
         description: The new Core Operator version to use, no v prefix.
         required: true
@@ -72,13 +68,6 @@ jobs:
     secrets:
       token: ${{ secrets.CI_PAT }}
 
-  get-core-release:
-    uses: ./.github/workflows/get-latest-tag.yaml
-    with:
-      repo: core
-    secrets:
-      token: ${{ secrets.CI_PAT }}
-
   get-core-operator-release:
     uses: ./.github/workflows/get-latest-tag.yaml
     with:
@@ -115,7 +104,6 @@ jobs:
       - get-cloud-release
       - get-cloud-e2e-release
       - get-core-fluent-bit-release
-      - get-core-release
       - get-core-operator-release
       - get-frontend-release
       - get-lua-sandbox-release
@@ -138,7 +126,6 @@ jobs:
           .versions.cloud = "${{ inputs.cloud-version || needs.get-cloud-release.outputs.semver-tag }}" |
           .versions.cloud_e2e = "${{ inputs.cloud-e2e-version || needs.get-cloud-e2e-release.outputs.semver-tag }}" |
           .versions.core_fluent_bit = "${{ inputs.core-fluent-bit-version || needs.get-core-fluent-bit-release.outputs.semver-tag }}" |
-          .versions.core = "${{ inputs.core-version || needs.get-core-release.outputs.semver-tag }}" |
           .versions.core_operator = "${{ inputs.core-operator-version || needs.get-core-operator-release.outputs.semver-tag }}" |
           .versions.frontend = "${{ inputs.frontend-version || needs.get-frontend-release.outputs.semver-tag }}" |
           .versions.lua_sandbox = "${{ inputs.lua-sandbox-version || needs.get-lua-sandbox-release.outputs.semver-tag }}"' ./component-config.json | tee ./component-config-new.json
