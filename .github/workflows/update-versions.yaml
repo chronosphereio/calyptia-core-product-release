@@ -151,7 +151,6 @@ jobs:
             - Cloud: ${{ inputs.cloud-version || needs.get-cloud-release.outputs.tag }}
             - Cloud E2E: ${{ inputs.cloud-e2e-version || needs.get-cloud-release.outputs.tag }}
             - Core Fluent Bit: ${{ inputs.core-fluent-bit-version || needs.get-core-fluent-bit-release.outputs.tag }}
-            - Core: ${{ inputs.core-version || needs.get-core-release.outputs.tag }}
             - Core Operator: ${{ inputs.core-operator-version || needs.get-core-operator-release.outputs.tag }}
             - Frontend: ${{ inputs.frontend-version || needs.get-frontend-release.outputs.tag }}
             - Cloud LUA Sandbox: ${{ inputs.lua-sandbox-version || needs.get-lua-sandbox-release.outputs.tag }}
