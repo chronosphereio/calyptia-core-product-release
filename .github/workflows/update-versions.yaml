@@ -43,56 +43,56 @@ jobs:
   get-cli-release:
     uses: ./.github/workflows/get-latest-tag.yaml
     with:
-      repo: cli
+      repo: calyptia-cli
     secrets:
       token: ${{ secrets.CI_PAT }}
 
   get-cloud-release:
     uses: ./.github/workflows/get-latest-tag.yaml
     with:
-      repo: cloud
+      repo: calyptia-cloud
     secrets:
       token: ${{ secrets.CI_PAT }}
 
   get-cloud-e2e-release:
     uses: ./.github/workflows/get-latest-tag.yaml
     with:
-      repo: cloud
+      repo: calyptia-cloud
     secrets:
       token: ${{ secrets.CI_PAT }}
 
   get-core-fluent-bit-release:
     uses: ./.github/workflows/get-latest-tag.yaml
     with:
-      repo: core-fluent-bit
+      repo: calyptia-core-fluent-bit
     secrets:
       token: ${{ secrets.CI_PAT }}
 
   get-core-operator-release:
     uses: ./.github/workflows/get-latest-tag.yaml
     with:
-      repo: core-operator
+      repo: calyptia-core-operator
     secrets:
       token: ${{ secrets.CI_PAT }}
 
   get-frontend-release:
     uses: ./.github/workflows/get-latest-tag.yaml
     with:
-      repo: frontend
+      repo: calyptia-frontend
     secrets:
       token: ${{ secrets.CI_PAT }}
 
   get-lua-sandbox-release:
     uses: ./.github/workflows/get-latest-tag.yaml
     with:
-      repo: cloud-lua-sandbox
+      repo: calyptia-cloud-lua-sandbox
     secrets:
       token: ${{ secrets.CI_PAT }}
 
   get-lua-modules-release:
     uses: ./.github/workflows/get-latest-tag.yaml
     with:
-      repo: lua-modules
+      repo: calyptia-lua-modules
     secrets:
       token: ${{ secrets.CI_PAT }}
 
