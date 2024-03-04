@@ -10,7 +10,7 @@ on:
         description: The organisation containing the repo we want the latest tag for.
         required: false
         type: string
-        default: calyptia
+        default: chronosphereio
     secrets:
       token:
         description: The Github token to use for authentication with the repository.
