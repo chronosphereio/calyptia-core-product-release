@@ -7,7 +7,7 @@
     "core_operator": "2.6.0",
     "configmap_reload": "0.11.1",
     "core_sidecar_ingest_check": "0.0.7",
-    "frontend": "1.10.0",
+    "frontend": "1.11.0",
     "lua_sandbox": "3.3.1",
     "lua_modules": "5.3.0"
   },
