@@ -19,7 +19,7 @@ jobs:
         steps:
             - uses: actions/checkout@v4
               with:
-                repository: calyptia/api
+                repository: chronosphereio/calyptia-api
 
             - name: API schema tests
               run: |

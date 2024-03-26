@@ -21,6 +21,7 @@ if ! command -v jq &> /dev/null; then
     exit 1
 fi
 
+CLOUD_VERSION=${CLOUD_VERSION:-$(jq -r .versions.cloud "$SCRIPT_DIR/../component-config.json")}
 CORE_FB_VERSION=${CORE_FB_VERSION:-$(jq -r .versions.core_fluent_bit "$SCRIPT_DIR/../component-config.json")}
 FRONTEND_VERSION=${FRONTEND_VERSION:-$(jq -r .versions.frontend "$SCRIPT_DIR/../component-config.json")}
 LUASANDBOX_VERSION=${LUASANDBOX_VERSION:-$(jq -r .versions.lua_sandbox "$SCRIPT_DIR/../component-config.json")}
@@ -34,7 +35,8 @@ declare -a images=("ghcr.io/calyptia/configmap-reload:$HOT_RELOAD_VERSION"
 "ghcr.io/calyptia/core-operator:$CORE_OPERATOR_VERSION"
 "ghcr.io/calyptia/core-operator/sync-to-cloud:$CORE_OPERATOR_VERSION"
 "ghcr.io/calyptia/core-operator/sync-from-cloud:$CORE_OPERATOR_VERSION"
-"ghcr.io/calyptia/frontend:$FRONTEND_VERSION"
+"ghcr.io/chronosphereio/calyptia-cloud:$CLOUD_VERSION"
+"ghcr.io/chronosphereio/calyptia-frontend:$FRONTEND_VERSION"
 "ghcr.io/calyptia/cloud-lua-sandbox:$LUASANDBOX_VERSION"
 )
 
