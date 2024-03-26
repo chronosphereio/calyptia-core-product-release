@@ -16,10 +16,6 @@ jobs:
     if: ${{ ! contains(github.event.pull_request.labels.*.name, 'disable-e2e-tests') }}
     needs:
       - ci-get-metadata
-    # We cannot run this from a public repo as the cloud-e2e repo is private so even though it shares workflows with the Calyptia org,
-    # they can only be run from a private calling repo.
-    # uses: calyptia/cloud-e2e/.github/workflows/call-integration-tests.yaml@main
-    # Instead we have to replicate the same workflow locally
     uses: ./.github/workflows/call-integration-tests.yaml
     with:
       cli-version: v${{ needs.ci-get-metadata.outputs.cli-version }}
@@ -38,10 +34,6 @@ jobs:
     if: contains(github.event.pull_request.labels.*.name, 'openshift-build')
     needs:
       - ci-get-metadata
-    # We cannot run this from a public repo as the cloud-e2e repo is private so even though it shares workflows with the Calyptia org,
-    # they can only be run from a private calling repo.
-    # uses: calyptia/cloud-e2e/.github/workflows/call-integration-tests.yaml@main
-    # Instead we have to replicate the same workflow locally
     uses: ./.github/workflows/call-integration-tests.yaml
     with:
       cli-version: v${{ needs.ci-get-metadata.outputs.cli-version }}
@@ -84,10 +76,6 @@ jobs:
     if: contains(github.event.pull_request.labels.*.name, 'enable-vcluster-tests')
     needs:
       - ci-get-metadata
-    # We cannot run this from a public repo as the cloud-e2e repo is private so even though it shares workflows with the Calyptia org,
-    # they can only be run from a private calling repo.
-    # uses: calyptia/cloud-e2e/.github/workflows/call-integration-tests.yaml@main
-    # Instead we have to replicate the same workflow locally
     uses: ./.github/workflows/call-integration-tests.yaml
     with:
       cli-version: v${{ needs.ci-get-metadata.outputs.cli-version }}

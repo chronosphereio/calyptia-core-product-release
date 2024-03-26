@@ -70,7 +70,7 @@ jobs:
         contents: read
       strategy:
         matrix:
-          repo: ['calyptia/infra-gitops-configuration', 'calyptia/chart-cloud-standalone', 'chronosphereio/calyptia-core-docs']
+          repo: ['chronosphereio/calyptia-infra-gitops-configuration', 'chronosphereio/calyptia-chart-cloud-standalone', 'chronosphereio/calyptia-core-docs']
       steps:
         - uses: actions/checkout@v4
 

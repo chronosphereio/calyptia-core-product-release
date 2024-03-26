@@ -284,7 +284,7 @@ function calyptiaCliInstall() {
             CALYPTIA_CLI_VERSION="${CALYPTIA_CLI_VERSION:-latest}"
             echo "Installing Calyptia CLI version: $CALYPTIA_CLI_VERSION"
             export cli_VERSION="$CALYPTIA_CLI_VERSION"
-            curl -sSfL https://raw.githubusercontent.com/calyptia/cli/main/install.sh | bash
+            curl -sSfL https://raw.githubusercontent.com/chronosphereio/calyptia-cli/main/install.sh | bash
         fi
     fi
     calyptia version
