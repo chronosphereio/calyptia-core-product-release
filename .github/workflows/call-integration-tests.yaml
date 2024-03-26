@@ -16,8 +16,8 @@
         cloud-image:
           type: string
           required: false
-          default: ghcr.io/calyptia/cloud:latest
-          description: docker image of calyptia/cloud
+          default: ghcr.io/chronosphereio/calyptia-cloud:latest
+          description: docker image of chronosphereio/calyptia-cloud
         core-operator-image:
           type: string
           required: false
@@ -40,8 +40,8 @@
         frontend-image:
           type: string
           required: false
-          default: ghcr.io/calyptia/frontend:main
-          description: docker image of calyptia/frontend
+          default: ghcr.io/chronosphereio/calyptia-frontend:latest
+          description: docker image of chronosphereio/calyptia-frontend
         lua-sandbox-image:
           type: string
           required: false
