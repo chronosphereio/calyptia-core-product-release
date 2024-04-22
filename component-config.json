@@ -9,7 +9,7 @@
     "core_sidecar_ingest_check": "0.0.7",
     "frontend": "1.19.1",
     "lua_sandbox": "4.0.0",
-    "lua_modules": "6.0.0"
+    "lua_modules": "6.1.0"
   },
   "k8s_kind_versions": [
     "v1.27.3",
