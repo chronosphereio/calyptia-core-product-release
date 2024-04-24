@@ -121,6 +121,7 @@
       uses: ./.github/workflows/get-versions.yaml
 
     run-integration-tests-linux:
+      name: Linux e2e tests
       if: (inputs.k8s-distribution == 'kind' || inputs.k8s-distribution == 'vcluster') && !(contains(inputs.runner, 'mac') || contains(inputs.runner, 'windows'))
       needs:
         - get-versions
@@ -208,4 +209,12 @@
             REGISTRY_USERNAME: ${{ secrets.registry-username }}
             REGISTRY_PASSWORD: ${{ secrets.registry-password }}
             TEST_UID: ${{ github.repository }}-${{ github.run_id }}-${{ strategy.job-index }}
+
+    integration-tests-complete:
+      needs:
+        - run-integration-tests-linux
+      # Do not rename as used as a required check
+      name: Linux e2e tests complete
+      runs-on: ubuntu-latest
+      permissions: {}
 

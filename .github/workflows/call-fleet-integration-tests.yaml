@@ -74,6 +74,7 @@ jobs:
   run-integration-tests-windows:
     if: contains(inputs.runner, 'windows')
     runs-on: ${{ inputs.runner }}
+    name: Windows Fleet tests
     needs:
       - verify-inputs
     steps:
@@ -169,6 +170,7 @@ jobs:
 
   run-integration-tests-macos:
     if: contains(inputs.runner, 'macos')
+    name: macOS Fleet tests
     runs-on: ${{ inputs.runner }}
     needs:
       - verify-inputs
