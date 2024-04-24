@@ -12,6 +12,16 @@ jobs:
   ci-get-metadata:
     uses: ./.github/workflows/get-versions.yaml
 
+  # Empty required check
+  ci-skip-e2e-tests:
+    name: Linux e2e tests complete
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'disable-e2e-tests') }}
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - run: echo Complete
+        shell: bash
+
   ci-e2e-tests:
     if: ${{ ! contains(github.event.pull_request.labels.*.name, 'disable-e2e-tests') }}
     needs:
