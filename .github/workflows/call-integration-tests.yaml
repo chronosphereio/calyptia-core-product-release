@@ -217,4 +217,7 @@
       name: Linux e2e tests complete
       runs-on: ubuntu-latest
       permissions: {}
+      steps:
+        - run: echo Complete
+          shell: bash
 
