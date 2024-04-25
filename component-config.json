@@ -1,6 +1,6 @@
 {
   "versions": {
-    "cli": "1.17.3",
+    "cli": "1.17.4",
     "cloud": "1.8.2",
     "cloud_e2e": "1.6.5",
     "core_fluent_bit": "24.4.4",
