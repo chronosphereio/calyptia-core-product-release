@@ -129,7 +129,7 @@ jobs:
           .versions.core_operator = "${{ inputs.core-operator-version || needs.get-core-operator-release.outputs.semver-tag }}" |
           .versions.frontend = "${{ inputs.frontend-version || needs.get-frontend-release.outputs.semver-tag }}" |
           .versions.lua_sandbox = "${{ inputs.lua-sandbox-version || needs.get-lua-sandbox-release.outputs.semver-tag }}" |
-          .versions.lua_modules = "${{ inputs.lua-modules-version || needs.get-lua-modules-release.outputs.semver-tag }}" ./component-config.json | tee ./component-config-new.json
+          .versions.lua_modules = "${{ inputs.lua-modules-version || needs.get-lua-modules-release.outputs.semver-tag }}"' ./component-config.json | tee ./component-config-new.json
           mv -f ./component-config-new.json ./component-config.json
         shell: bash
 
