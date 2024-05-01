@@ -2,7 +2,7 @@
   "versions": {
     "cli": "1.17.4",
     "cloud": "1.8.3",
-    "cloud_e2e": "1.6.5",
+    "cloud_e2e": "1.8.3",
     "core_fluent_bit": "24.4.4",
     "core_operator": "2.9.0",
     "configmap_reload": "0.11.1",
