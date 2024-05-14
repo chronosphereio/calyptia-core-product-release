@@ -1,4 +1,5 @@
 name: Composite action to debug cluster
+description: Simple action to be reused for all debug
 runs:
   using: composite
   steps:
