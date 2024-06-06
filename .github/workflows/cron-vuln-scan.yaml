@@ -77,27 +77,11 @@ jobs:
               if: failure() && github.event_name != 'pull_request'
               uses: slackapi/slack-github-action@v1.26.0
               with:
-                # pipeline-eng-notifications
-                channel-id: ${{ vars.CVE_SLACK_CHANNEL_ID }}
                 payload: |
                     {
-                        "text": "CVE detected in ${{ matrix.container }}: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-                        "blocks": [
-                            {
-                                "type": "section",
-                                "text": {
-                                  "type": "mrkdwn",
-                                  "text": "json:"
-                                }
-                            },
-                            {
-                                "type": "context",
-                                "text": {
-                                    "type": "plain_text",
-                                    "text": "${{ steps.output.outputs.json }}"
-                                }
-                            }
-                        ]
+                        "container": ${{ matrix.container }}
+                        "reporter": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                        "details": "${{ steps.output.outputs.json }}"
                     }
               env:
-                SLACK_BOT_TOKEN: ${{ secrets.CVE_SLACK_BOT_TOKEN }}
+                SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
