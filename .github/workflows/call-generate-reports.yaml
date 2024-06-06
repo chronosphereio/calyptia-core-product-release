@@ -55,7 +55,7 @@
                     OUTPUT_DIR: reports
 
                 - uses: actions/upload-artifact@v4
-                  if: always()
+                  if: github.ref_type == 'tag'
                   with:
                     name: reports
                     path: |
