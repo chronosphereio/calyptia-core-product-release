@@ -61,14 +61,12 @@ jobs:
                 by-cve: true
                 output-format: json
 
-            - name: Upload output (if any)
-              id: upload
-              uses: actions/upload-artifact@v4
-              with:
-                name: cve-${{ matrix.container }}
-                path: ${{ steps.scan.outputs.json }}
-                retention-days: 90
-                if-no-files-found: ignore
+            - name: Capture output to stdout for usage in notification
+              id: output
+              run: |
+                cat ${{ steps.scan.outputs.json }}
+                echo "json=$(cat ${{ steps.scan.outputs.json }})" >> $GITHUB_OUTPUT
+              shell: bash
 
             - name: Send to Slack
               if: failure()
@@ -78,13 +76,13 @@ jobs:
                 channel-id: 'C06DW9RAT1B'
                 payload: |
                     {
-                        "text": "CVE detected in ${{ matrix.container }}: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+                        "text": "CVE detected in ${{ matrix.container }}: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
                         "blocks": [
                             {
-                                "type": "section",
+                                "type": "rich_text_preformatted",
                                 "text": {
-                                    "type": "mrkdwn",
-                                    "text": "Report: ${{ steps.upload.outputs.artifact-url }}"
+                                    "type": "text",
+                                    "text": "${{ steps.output.outputs.json }}"
                                 }
                             }
                         ]
