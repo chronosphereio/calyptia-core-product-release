@@ -66,21 +66,31 @@ jobs:
             - name: Capture output to stdout for usage in notification
               if: failure()
               id: output
-              #  Output is multi-line so beware of that
+              #  Output is multi-line so beware of that and we need to escape all the quotes
               run: |
                 cat ${{ steps.scan.outputs.json }}
-                echo "json=$(jq -cr . ${{ steps.scan.outputs.json }})"
-                echo "json=$(jq -cr . ${{ steps.scan.outputs.json }})" >> $GITHUB_OUTPUT
+                json=$(jq -cr '[.matches[].vulnerability | select ( .severity == "Critical" or .severity == "High" )]' ${{ steps.scan.outputs.json }} | sed -e 's|\"|\\"|g')
+                echo "json=$json"
+                echo "json=$json" >> $GITHUB_OUTPUT
+
+                cves=$(jq -cr '[.matches[].vulnerability | select ( .severity == "Critical" or .severity == "High" )| {id,severity}]' | sed -e 's|\"|\\"|g')
+                echo "cves_severity=$cves_severity"
+                echo "cves_severity=$cves_severity" >> $GITHUB_OUTPUT
+
+                cves=$(jq -cr '[.matches[].vulnerability | select ( .severity == "Critical" or .severity == "High" )| .id]' | sed -e 's|\"||g')
+                echo "cves=$cves"
+                echo "cves=$cves" >> $GITHUB_OUTPUT
               shell: bash
 
             - name: Send to Slack
-              if: failure() && github.event_name != 'pull_request'
+              if: failure()
               uses: slackapi/slack-github-action@v1.26.0
               with:
                 payload: |
                     {
-                        "container": ${{ matrix.container }}
-                        "reporter": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                        "component": "${{ matrix.container }}",
+                        "cves": "${{ steps.output.outputs.cves }}",
+                        "reporter": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
                         "details": "${{ steps.output.outputs.json }}"
                     }
               env:
