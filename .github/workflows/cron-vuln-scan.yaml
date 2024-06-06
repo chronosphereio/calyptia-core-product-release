@@ -49,6 +49,7 @@ jobs:
                 image: ${{ matrix.container }}
                 by-cve: true
                 output-format: table
+                fail-build: false
 
             - name: Scan image
               id: scan
