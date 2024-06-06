@@ -64,12 +64,17 @@ jobs:
                 output-format: json
 
             - name: Capture output to stdout for usage in notification
+              if: failure()
             # https://manumagalhaes.medium.com/github-actions-one-liner-solution-to-multiline-output-c228727722f8
               id: output
               run: |
-                cat ${{ steps.scan.outputs.json }}
-                FILE_CONTENT="$(<${{ steps.scan.outputs.json }})"
-                echo "json<<EOF"$'\n'"$FILE_CONTENT"$'\n'EOF >> $GITHUB_OUTPUT
+                echo 'JSON_OUTPUT<<EOF' >> $GITHUB_ENV
+                cat ${{ steps.scan.outputs.json }} >> $GITHUB_ENV
+                echo 'EOF' >> $GITHUB_ENV
+                echo "JSON_OUTPUT=$JSON_OUTPUT"
+
+                echo "json=$(jq -cr . ${{ steps.scan.outputs.json }})"
+                echo "json=$(jq -cr . ${{ steps.scan.outputs.json }})" >> $GITHUB_OUTPUT
               shell: bash
 
             - name: Send to Slack
@@ -86,7 +91,7 @@ jobs:
                                 "type": "section",
                                 "text": {
                                   "type": "mrkdwn",
-                                  "text": "CVE detected in ${{ matrix.container }}:"
+                                  "text": "json:"
                                 }
                             },
                             {
