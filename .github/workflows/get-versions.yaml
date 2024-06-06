@@ -31,6 +31,26 @@ on:
                 value: ${{ jobs.get-version.outputs.k3s-test-versions }}
             lua-modules-version:
               value: ${{ jobs.get-version.outputs.lua-modules-version }}
+            ingest-checks-version:
+              value: ${{ jobs.get-version.outputs.ingest-checks-version }}
+            cloud-image:
+                value: ${{ jobs.get-image.outputs.cloud-image }}
+            core-fluent-bit-image:
+                value: ${{ jobs.get-image.outputs.core-fluent-bit-image }}
+            core-operator-image:
+                value: ${{ jobs.get-image.outputs.core-operator-image }}
+            core-operator-sync-to-image:
+                value: ${{ jobs.get-image.outputs.core-operator-sync-to-image }}
+            core-operator-sync-from-image:
+                value: ${{ jobs.get-image.outputs.core-operator-sync-from-image }}
+            configmap-reload-image:
+                value: ${{ jobs.get-image.outputs.configmap-reload-image }}
+            frontend-image:
+                value: ${{ jobs.get-image.outputs.frontend-image }}
+            lua-sandbox-image:
+                value: ${{ jobs.get-image.outputs.lua-sandbox-image }}
+            ingest-checks-image:
+              value: ${{ jobs.get-image.outputs.ingest-checks-image }}
 jobs:
     get-version:
         name: Get the core-product-release versions
@@ -50,6 +70,7 @@ jobs:
             lua-modules-version: ${{ steps.lua-modules-version.outputs.version }}
             k8s-test-versions: ${{ steps.k8s-test-versions.outputs.version }}
             k3s-test-versions: ${{ steps.k3s-test-versions.outputs.version }}
+            ingest-checks-version: ${{ steps.ingest-checks-version.outputs.version }}
         steps:
             - uses: actions/checkout@v4
               with:
@@ -144,6 +165,112 @@ jobs:
             - id: k3s-test-versions
               run: |
                 VERSION=$(jq -cr .k8s_k3s_versions component-config.json)
+                echo "$VERSION"
+                echo "version=$VERSION" >> $GITHUB_OUTPUT
+              shell: bash
+
+            - id: ingest-checks-version
+              run: |
+                VERSION=$(jq -cr .versions.core_sidecar_ingest_check component-config.json)
+                echo "$VERSION"
+                echo "version=$VERSION" >> $GITHUB_OUTPUT
+              shell: bash
+
+    get-image:
+        name: Get the core-product-release images
+        runs-on: ubuntu-latest
+        permissions:
+            # Public repo so no token required
+            contents: none
+        outputs:
+            cloud-image: ${{ steps.cloud-image.outputs.image }}
+            core-fluent-bit-image: ${{ steps.core-fluent-bit-image.outputs.image }}
+            core-operator-image: ${{ steps.core-operator-image.outputs.image }}
+            core-operator-sync-to-image: ${{ steps.core-operator-sync-to-image.outputs.image }}
+            core-operator-sync-from-image: ${{ steps.core-operator-sync-from-image.outputs.image }}
+            configmap-reload-image: ${{ steps.configmap-reload-image.outputs.image }}
+            frontend-image: ${{ steps.frontend-image.outputs.image }}
+            lua-sandbox-image: ${{ steps.lua-sandbox-image.outputs.image }}
+            ingest-checks-image: ${{ steps.ingest-checks-image.outputs.image }}
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                repository: chronosphereio/calyptia-core-product-release
+                ref: ${{ inputs.ref }}
+
+            - name: Install dependencies
+              run: |
+                sudo apt-get update
+                sudo apt-get install -y jq
+              shell: bash
+
+            - id: cloud-image
+              continue-on-error: true
+              run: |
+                VERSION=$(jq -cr .containers.cloud component-config.json)
+                echo "$VERSION"
+                echo "version=$VERSION" >> $GITHUB_OUTPUT
+              shell: bash
+
+            - id: core-fluent-bit-image
+              continue-on-error: true
+              run: |
+                VERSION=$(jq -cr .containers.core_fluent_bit component-config.json)
+                echo "$VERSION"
+                echo "version=$VERSION" >> $GITHUB_OUTPUT
+              shell: bash
+
+            - id: core-operator-image
+              continue-on-error: true
+              run: |
+                VERSION=$(jq -cr .containers.core_operator component-config.json)
+                echo "$VERSION"
+                echo "version=$VERSION" >> $GITHUB_OUTPUT
+              shell: bash
+
+            - id: core-operator-sync-to-image
+              continue-on-error: true
+              run: |
+                VERSION=$(jq -cr .containers.core_operator_sync_to component-config.json)
+                echo "$VERSION"
+                echo "version=$VERSION" >> $GITHUB_OUTPUT
+              shell: bash
+
+            - id: core-operator-sync-from-image
+              continue-on-error: true
+              run: |
+                VERSION=$(jq -cr .containers.core_operator_sync_from component-config.json)
+                echo "$VERSION"
+                echo "version=$VERSION" >> $GITHUB_OUTPUT
+              shell: bash
+
+            - id: configmap-reload-image
+              continue-on-error: true
+              run: |
+                VERSION=$(jq -cr .containers.configmap_reload component-config.json)
+                echo "$VERSION"
+                echo "version=$VERSION" >> $GITHUB_OUTPUT
+              shell: bash
+
+            - id: frontend-image
+              continue-on-error: true
+              run: |
+                VERSION=$(jq -cr .containers.frontend component-config.json)
+                echo "$VERSION"
+                echo "version=$VERSION" >> $GITHUB_OUTPUT
+              shell: bash
+
+            - id: lua-sandbox-image
+              continue-on-error: true
+              run: |
+                VERSION=$(jq -cr .containers.lua_sandbox component-config.json)
+                echo "$VERSION"
+                echo "version=$VERSION" >> $GITHUB_OUTPUT
+              shell: bash
+
+            - id: ingest-checks-image
+              run: |
+                VERSION=$(jq -cr .containers.core_sidecar_ingest_check component-config.json)
                 echo "$VERSION"
                 echo "version=$VERSION" >> $GITHUB_OUTPUT
               shell: bash

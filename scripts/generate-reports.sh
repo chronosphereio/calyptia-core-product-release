@@ -29,15 +29,25 @@ CORE_OPERATOR_VERSION=${CORE_OPERATOR_VERSION:-$(jq -r .versions.core_operator "
 HOT_RELOAD_VERSION=${HOT_RELOAD_VERSION:-$(jq -r .versions.configmap_reload "$SCRIPT_DIR/../component-config.json")}
 INGEST_CHECKS_VERSION=${INGEST_CHECKS_VERSION:-$(jq -r .versions.core_sidecar_ingest_check "$SCRIPT_DIR/../component-config.json")}
 
-declare -a images=("ghcr.io/calyptia/configmap-reload:$HOT_RELOAD_VERSION"
-"ghcr.io/calyptia/core/calyptia-fluent-bit:$CORE_FB_VERSION"
-"ghcr.io/calyptia/core/ingest-check:$INGEST_CHECKS_VERSION"
-"ghcr.io/calyptia/core-operator:$CORE_OPERATOR_VERSION"
-"ghcr.io/calyptia/core-operator/sync-to-cloud:$CORE_OPERATOR_VERSION"
-"ghcr.io/calyptia/core-operator/sync-from-cloud:$CORE_OPERATOR_VERSION"
-"ghcr.io/chronosphereio/calyptia-cloud:$CLOUD_VERSION"
-"ghcr.io/chronosphereio/calyptia-frontend:$FRONTEND_VERSION"
-"ghcr.io/calyptia/cloud-lua-sandbox:$LUASANDBOX_VERSION"
+CLOUD_IMAGE=${CLOUD_IMAGE:-$(jq -r .containers.cloud "$SCRIPT_DIR/../component-config.json")}
+CORE_FB_IMAGE=${CORE_FB_IMAGE:-$(jq -r .containers.core_fluent_bit "$SCRIPT_DIR/../component-config.json")}
+FRONTEND_IMAGE=${FRONTEND_IMAGE:-$(jq -r .containers.frontend "$SCRIPT_DIR/../component-config.json")}
+LUASANDBOX_IMAGE=${LUASANDBOX_IMAGE:-$(jq -r .containers.lua_sandbox "$SCRIPT_DIR/../component-config.json")}
+CORE_OPERATOR_IMAGE=${CORE_OPERATOR_IMAGE:-$(jq -r .containers.core_operator "$SCRIPT_DIR/../component-config.json")}
+CORE_OPERATOR_SYNC_TO_IMAGE=${CORE_OPERATOR_SYNC_TO_IMAGE:-$(jq -r .containers.core_operator_sync_to "$SCRIPT_DIR/../component-config.json")}
+CORE_OPERATOR_SYNC_FROM_IMAGE=${CORE_OPERATOR_SYNC_FROM_IMAGE:-$(jq -r .containers.core_operator_sync_from "$SCRIPT_DIR/../component-config.json")}
+HOT_RELOAD_IMAGE=${HOT_RELOAD_IMAGE:-$(jq -r .containers.configmap_reload "$SCRIPT_DIR/../component-config.json")}
+INGEST_CHECKS_IMAGE=${INGEST_CHECKS_IMAGE:-$(jq -r .containers.core_sidecar_ingest_check "$SCRIPT_DIR/../component-config.json")}
+
+declare -a images=("$HOT_RELOAD_IMAGE:$HOT_RELOAD_VERSION"
+"$CORE_FB_IMAGE:$CORE_FB_VERSION"
+"$INGEST_CHECKS_IMAGE:$INGEST_CHECKS_VERSION"
+"$CORE_OPERATOR_IMAGE:$CORE_OPERATOR_VERSION"
+"$CORE_OPERATOR_SYNC_TO_IMAGE:$CORE_OPERATOR_VERSION"
+"$CORE_OPERATOR_SYNC_FROM_IMAGE:$CORE_OPERATOR_VERSION"
+"$CLOUD_IMAGE:$CLOUD_VERSION"
+"$FRONTEND_IMAGE:$FRONTEND_VERSION"
+"$LUASANDBOX_IMAGE:$LUASANDBOX_VERSION"
 )
 
 rm -rf "${OUTPUT_DIR:?}/*"
