@@ -207,70 +207,70 @@ jobs:
             - id: cloud-image
               continue-on-error: true
               run: |
-                VERSION=$(jq -cr .containers.cloud component-config.json)
-                echo "$VERSION"
-                echo "version=$VERSION" >> $GITHUB_OUTPUT
+                IMAGE=$(jq -cr .containers.cloud component-config.json)
+                echo "$IMAGE"
+                echo "image=$IMAGE" >> $GITHUB_OUTPUT
               shell: bash
 
             - id: core-fluent-bit-image
               continue-on-error: true
               run: |
-                VERSION=$(jq -cr .containers.core_fluent_bit component-config.json)
-                echo "$VERSION"
-                echo "version=$VERSION" >> $GITHUB_OUTPUT
+                IMAGE=$(jq -cr .containers.core_fluent_bit component-config.json)
+                echo "$IMAGE"
+                echo "image=$IMAGE" >> $GITHUB_OUTPUT
               shell: bash
 
             - id: core-operator-image
               continue-on-error: true
               run: |
-                VERSION=$(jq -cr .containers.core_operator component-config.json)
-                echo "$VERSION"
-                echo "version=$VERSION" >> $GITHUB_OUTPUT
+                IMAGE=$(jq -cr .containers.core_operator component-config.json)
+                echo "$IMAGE"
+                echo "image=$IMAGE" >> $GITHUB_OUTPUT
               shell: bash
 
             - id: core-operator-sync-to-image
               continue-on-error: true
               run: |
-                VERSION=$(jq -cr .containers.core_operator_sync_to component-config.json)
-                echo "$VERSION"
-                echo "version=$VERSION" >> $GITHUB_OUTPUT
+                IMAGE=$(jq -cr .containers.core_operator_sync_to component-config.json)
+                echo "$IMAGE"
+                echo "image=$IMAGE" >> $GITHUB_OUTPUT
               shell: bash
 
             - id: core-operator-sync-from-image
               continue-on-error: true
               run: |
-                VERSION=$(jq -cr .containers.core_operator_sync_from component-config.json)
-                echo "$VERSION"
-                echo "version=$VERSION" >> $GITHUB_OUTPUT
+                IMAGE=$(jq -cr .containers.core_operator_sync_from component-config.json)
+                echo "$IMAGE"
+                echo "image=$IMAGE" >> $GITHUB_OUTPUT
               shell: bash
 
             - id: configmap-reload-image
               continue-on-error: true
               run: |
-                VERSION=$(jq -cr .containers.configmap_reload component-config.json)
-                echo "$VERSION"
-                echo "version=$VERSION" >> $GITHUB_OUTPUT
+                IMAGE=$(jq -cr .containers.configmap_reload component-config.json)
+                echo "$IMAGE"
+                echo "image=$IMAGE" >> $GITHUB_OUTPUT
               shell: bash
 
             - id: frontend-image
               continue-on-error: true
               run: |
-                VERSION=$(jq -cr .containers.frontend component-config.json)
-                echo "$VERSION"
-                echo "version=$VERSION" >> $GITHUB_OUTPUT
+                IMAGE=$(jq -cr .containers.frontend component-config.json)
+                echo "$IMAGE"
+                echo "image=$IMAGE" >> $GITHUB_OUTPUT
               shell: bash
 
             - id: lua-sandbox-image
               continue-on-error: true
               run: |
-                VERSION=$(jq -cr .containers.lua_sandbox component-config.json)
-                echo "$VERSION"
-                echo "version=$VERSION" >> $GITHUB_OUTPUT
+                IMAGE=$(jq -cr .containers.lua_sandbox component-config.json)
+                echo "$IMAGE"
+                echo "image=$IMAGE" >> $GITHUB_OUTPUT
               shell: bash
 
             - id: ingest-checks-image
               run: |
-                VERSION=$(jq -cr .containers.core_sidecar_ingest_check component-config.json)
-                echo "$VERSION"
-                echo "version=$VERSION" >> $GITHUB_OUTPUT
+                IMAGE=$(jq -cr .containers.core_sidecar_ingest_check component-config.json)
+                echo "$IMAGE"
+                echo "image=$IMAGE" >> $GITHUB_OUTPUT
               shell: bash

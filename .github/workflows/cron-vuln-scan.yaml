@@ -1,9 +1,10 @@
-name: Regular CVE scan of components to trigger alerting
+name: CVE scan of components to trigger alerting
 on:
     workflow_dispatch:
     schedule:
         # Every day at 0430 UTC
         - cron: '30 4 * * *'
+    pull_request:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -49,6 +50,7 @@ jobs:
                 image: ${{ matrix.container }}
                 by-cve: true
                 output-format: table
+                fail-build: false
 
             - name: Scan image
               id: scan
@@ -62,26 +64,36 @@ jobs:
                 output-format: json
 
             - name: Capture output to stdout for usage in notification
+              if: failure()
               id: output
+              #  Output is multi-line so beware of that
               run: |
                 cat ${{ steps.scan.outputs.json }}
-                echo "json=$(cat ${{ steps.scan.outputs.json }})" >> $GITHUB_OUTPUT
+                echo "json=$(jq -cr . ${{ steps.scan.outputs.json }})"
+                echo "json=$(jq -cr . ${{ steps.scan.outputs.json }})" >> $GITHUB_OUTPUT
               shell: bash
 
             - name: Send to Slack
-              if: failure()
+              if: failure() && github.event_name != 'pull_request'
               uses: slackapi/slack-github-action@v1.26.0
               with:
                 # pipeline-eng-notifications
-                channel-id: ${{ secrets.CVE_SLACK_CHANNEL_ID }}
+                channel-id: ${{ vars.CVE_SLACK_CHANNEL_ID }}
                 payload: |
                     {
                         "text": "CVE detected in ${{ matrix.container }}: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
                         "blocks": [
                             {
-                                "type": "rich_text_preformatted",
+                                "type": "section",
                                 "text": {
-                                    "type": "text",
+                                  "type": "mrkdwn",
+                                  "text": "json:"
+                                }
+                            },
+                            {
+                                "type": "context",
+                                "text": {
+                                    "type": "plain_text",
                                     "text": "${{ steps.output.outputs.json }}"
                                 }
                             }
