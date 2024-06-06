@@ -39,6 +39,10 @@ on:
                 value: ${{ jobs.get-image.outputs.core-fluent-bit-image }}
             core-operator-image:
                 value: ${{ jobs.get-image.outputs.core-operator-image }}
+            core-operator-sync-to-image:
+                value: ${{ jobs.get-image.outputs.core-operator-sync-to-image }}
+            core-operator-sync-from-image:
+                value: ${{ jobs.get-image.outputs.core-operator-sync-from-image }}
             configmap-reload-image:
                 value: ${{ jobs.get-image.outputs.configmap-reload-image }}
             frontend-image:
