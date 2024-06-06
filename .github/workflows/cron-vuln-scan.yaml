@@ -73,17 +73,17 @@ jobs:
                 echo "json=$json"
                 echo "json=$json" >> $GITHUB_OUTPUT
 
-                cves=$(jq -cr '[.matches[].vulnerability | select ( .severity == "Critical" or .severity == "High" )| {id,severity}]' | sed -e 's|\"|\\"|g')
+                cves=$(jq -cr '[.matches[].vulnerability | select ( .severity == "Critical" or .severity == "High" )| {id,severity}]' ${{ steps.scan.outputs.json }} | sed -e 's|\"|\\"|g')
                 echo "cves_severity=$cves_severity"
                 echo "cves_severity=$cves_severity" >> $GITHUB_OUTPUT
 
-                cves=$(jq -cr '[.matches[].vulnerability | select ( .severity == "Critical" or .severity == "High" )| .id]' | sed -e 's|\"||g')
+                cves=$(jq -cr '[.matches[].vulnerability | select ( .severity == "Critical" or .severity == "High" )| .id]' ${{ steps.scan.outputs.json }} | sed -e 's|\"||g')
                 echo "cves=$cves"
                 echo "cves=$cves" >> $GITHUB_OUTPUT
               shell: bash
 
             - name: Send to Slack
-              if: failure()
+              if: failure() && github.event_name != 'pull_request'
               uses: slackapi/slack-github-action@v1.26.0
               with:
                 payload: |
