@@ -1,0 +1,93 @@
+name: Regular CVE scan of components to trigger alerting
+on:
+    workflow_dispatch:
+    schedule:
+        # Every day at 0430 UTC
+        - cron: '30 4 * * *'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+    ci-get-metadata:
+        uses: ./.github/workflows/get-versions.yaml
+
+    ci-generate-alerts:
+        name: Trigger alerts for failing CVEs
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+        needs:
+            - ci-get-metadata
+        strategy:
+            matrix:
+                container:
+                    - '${{ needs.ci-get-metadata.outputs.configmap-reload-image }}:${{ needs.ci-get-metadata.outputs.configmap-reload-version }}'
+                    - '${{ needs.ci-get-metadata.outputs.core-fluent-bit-image }}:${{ needs.ci-get-metadata.outputs.core-fluent-bit-version }}'
+                    - '${{ needs.ci-get-metadata.outputs.ingest-checks-image }}:${{ needs.ci-get-metadata.outputs.ingest-checks-version }}'
+                    - '${{ needs.ci-get-metadata.outputs.core-operator-image }}:${{ needs.ci-get-metadata.outputs.core-operator-version }}'
+                    - '${{ needs.ci-get-metadata.outputs.core-operator-sync-to-image }}:${{ needs.ci-get-metadata.outputs.core-operator-version }}'
+                    - '${{ needs.ci-get-metadata.outputs.core-operator-sync-from-image }}:${{ needs.ci-get-metadata.outputs.core-operator-version }}'
+                    - '${{ needs.ci-get-metadata.outputs.cloud-image }}:${{ needs.ci-get-metadata.outputs.cloud-version }}'
+                    - '${{ needs.ci-get-metadata.outputs.frontend-image }}:${{ needs.ci-get-metadata.outputs.frontend-version }}'
+                    - '${{ needs.ci-get-metadata.outputs.lua-sandbox-image }}:${{ needs.ci-get-metadata.outputs.lua-sandbox-version }}'
+            fail-fast: false
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Login to GitHub Container Registry
+              uses: docker/login-action@v3
+              with:
+                registry: ghcr.io
+                username: ${{ github.actor }}
+                password: ${{ secrets.CI_PAT }}
+
+            - name: Scan image, table output for debug
+              uses: anchore/scan-action@v3
+              with:
+                image: ${{ matrix.container }}
+                by-cve: true
+                output-format: table
+
+            - name: Scan image
+              id: scan
+              uses: anchore/scan-action@v3
+              with:
+                image: ${{ matrix.container }}
+                fail-build: true
+                severity-cutoff: high
+                only-fixed: true
+                by-cve: true
+                output-format: json
+
+            - name: Upload output (if any)
+              id: upload
+              uses: actions/upload-artifact@v4
+              with:
+                name: cve-${{ matrix.container }}
+                path: ${{ steps.scan.outputs.json }}
+                retention-days: 90
+                if-no-files-found: ignore
+
+            - name: Send to Slack
+              if: failure()
+              uses: slackapi/slack-github-action@v1.26.0
+              with:
+                # pipeline-eng-notifications
+                channel-id: 'C06DW9RAT1B'
+                payload: |
+                    {
+                        "text": "CVE detected in ${{ matrix.container }}: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+                        "blocks": [
+                            {
+                                "type": "section",
+                                "text": {
+                                    "type": "mrkdwn",
+                                    "text": "Report: ${{ steps.upload.outputs.artifact-url }}"
+                                }
+                            }
+                        ]
+                    }
+              env:
+                SLACK_BOT_TOKEN: ${{ secrets.CVE_SLACK_BOT_TOKEN }}

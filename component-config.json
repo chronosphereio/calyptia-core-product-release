@@ -11,6 +11,17 @@
     "lua_sandbox": "4.2.0",
     "lua_modules": "6.1.1"
   },
+  "containers": {
+    "cloud": "ghcr.io/chronosphereio/calyptia-cloud",
+    "frontend": "ghcr.io/chronosphereio/calyptia-frontend",
+    "core_fluent_bit": "ghcr.io/calyptia/core/calyptia-fluent-bit",
+    "core_operator": "ghcr.io/calyptia/core-operator",
+    "core_operator_sync_to": "ghcr.io/calyptia/core-operator/sync-to-cloud",
+    "core_operator_sync_from": "ghcr.io/calyptia/core-operator/sync-from-cloud",
+    "configmap_reload": "ghcr.io/calyptia/configmap-reload",
+    "core_sidecar_ingest_check": "ghcr.io/calyptia/core/ingest-check",
+    "lua_sandbox": "ghcr.io/calyptia/cloud-lua-sandbox"
+  },
   "k8s_kind_versions": [
     "v1.27.3",
     "v1.25.11",
