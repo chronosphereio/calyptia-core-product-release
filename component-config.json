@@ -4,7 +4,7 @@
     "cloud": "1.12.0",
     "cloud_e2e": "1.12.0",
     "core_fluent_bit": "24.6.5",
-    "core_operator": "2.12.7",
+    "core_operator": "2.12.9",
     "configmap_reload": "0.11.1",
     "core_sidecar_ingest_check": "0.0.7",
     "frontend": "1.26.3",
