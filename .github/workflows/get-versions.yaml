@@ -30,9 +30,9 @@ on:
             k3s-test-versions:
                 value: ${{ jobs.get-version.outputs.k3s-test-versions }}
             lua-modules-version:
-              value: ${{ jobs.get-version.outputs.lua-modules-version }}
+                value: ${{ jobs.get-version.outputs.lua-modules-version }}
             ingest-checks-version:
-              value: ${{ jobs.get-version.outputs.ingest-checks-version }}
+                value: ${{ jobs.get-version.outputs.ingest-checks-version }}
             cloud-image:
                 value: ${{ jobs.get-image.outputs.cloud-image }}
             core-fluent-bit-image:
@@ -50,7 +50,7 @@ on:
             lua-sandbox-image:
                 value: ${{ jobs.get-image.outputs.lua-sandbox-image }}
             ingest-checks-image:
-              value: ${{ jobs.get-image.outputs.ingest-checks-image }}
+                value: ${{ jobs.get-image.outputs.ingest-checks-image }}
 jobs:
     get-version:
         name: Get the core-product-release versions
