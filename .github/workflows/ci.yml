@@ -11,6 +11,8 @@ concurrency:
 jobs:
   ci-get-metadata:
     uses: ./.github/workflows/get-versions.yaml
+    with:
+      ref: ${{ github.ref }}
 
   ci-e2e-tests:
     needs:
@@ -22,29 +24,10 @@ jobs:
       core-operator-image: ghcr.io/calyptia/core-operator:${{ needs.ci-get-metadata.outputs.core-operator-version }}
       core-operator-from-cloud-image: ghcr.io/calyptia/core-operator/sync-from-cloud:${{ needs.ci-get-metadata.outputs.core-operator-version }}
       core-operator-to-cloud-image: ghcr.io/calyptia/core-operator/sync-to-cloud:${{ needs.ci-get-metadata.outputs.core-operator-version }}
+      cpr-ref: ${{ github.ref }}
     secrets:
       registry-username: ${{ secrets.CI_USERNAME }}
       registry-password: ${{ secrets.CI_PAT }}
-      # Replace with playground key after: https://app.asana.com/0/1205042382663691/1205231066738712/f
-      google-access-key: ${{ secrets.GCP_SA_KEY }}
-      github-token: ${{ secrets.CI_PAT }}
-
-  ci-e2e-tests-openshift:
-    if: contains(github.event.pull_request.labels.*.name, 'openshift-build')
-    needs:
-      - ci-get-metadata
-    uses: ./.github/workflows/call-integration-tests.yaml
-    with:
-      cli-version: v${{ needs.ci-get-metadata.outputs.cli-version }}
-      cloud-image: ghcr.io/chronosphereio/calyptia-cloud:${{ needs.ci-get-metadata.outputs.cloud-version }}
-      core-operator-image: ghcr.io/calyptia/core-operator:${{ needs.ci-get-metadata.outputs.core-operator-version }}
-      core-operator-from-cloud-image: ghcr.io/calyptia/core-operator/sync-from-cloud:${{ needs.ci-get-metadata.outputs.core-operator-version }}
-      core-operator-to-cloud-image: ghcr.io/calyptia/core-operator/sync-to-cloud:${{ needs.ci-get-metadata.outputs.core-operator-version }}
-      k8s-distribution: openshift
-    secrets:
-      registry-username: ${{ secrets.CI_USERNAME }}
-      registry-password: ${{ secrets.CI_PAT }}
-      # Replace with playground key after: https://app.asana.com/0/1205042382663691/1205231066738712/f
       google-access-key: ${{ secrets.GCP_SA_KEY }}
       github-token: ${{ secrets.CI_PAT }}
 
@@ -67,27 +50,6 @@ jobs:
     secrets:
       github-token: ${{ secrets.CI_PAT }}
       calyptia-cloud-token: ${{ secrets.CALYPTIA_CLOUD_TOKEN }}
-
-  ci-e2e-tests-vcluster:
-    # remove if decide to replace kind tests
-    if: contains(github.event.pull_request.labels.*.name, 'enable-vcluster-tests')
-    needs:
-      - ci-get-metadata
-    uses: ./.github/workflows/call-integration-tests.yaml
-    with:
-      cli-version: v${{ needs.ci-get-metadata.outputs.cli-version }}
-      cloud-image: ghcr.io/chronosphereio/calyptia-cloud:${{ needs.ci-get-metadata.outputs.cloud-version }}
-      core-operator-image: ghcr.io/calyptia/core-operator:${{ needs.ci-get-metadata.outputs.core-operator-version }}
-      core-operator-from-cloud-image: ghcr.io/calyptia/core-operator/sync-from-cloud:${{ needs.ci-get-metadata.outputs.core-operator-version }}
-      core-operator-to-cloud-image: ghcr.io/calyptia/core-operator/sync-to-cloud:${{ needs.ci-get-metadata.outputs.core-operator-version }}
-      k8s-distribution: "vcluster"
-      runner: "ubuntu-latest"
-    secrets:
-      registry-username: ${{ secrets.CI_USERNAME }}
-      registry-password: ${{ secrets.CI_PAT }}
-      # Replace with playground key after: https://app.asana.com/0/1205042382663691/1205231066738712/f
-      google-access-key: ${{ secrets.GCP_SA_KEY }}
-      github-token: ${{ secrets.CI_PAT }}
 
   ci-generate-reports:
     name: Generate SBOM and CVE reports for release

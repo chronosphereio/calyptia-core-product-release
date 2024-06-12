@@ -14,6 +14,11 @@ on:
         description: package artefact for calyptia fluent-bit
         default: ""
       ref:
+        description: The commit, tag or branch of the cloud-e2e repository to checkout
+        type: string
+        required: false
+        default: refs/heads/main
+      cpr-ref:
         description: The commit, tag or branch of this repository to checkout
         type: string
         required: false

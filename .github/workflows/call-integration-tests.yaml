@@ -52,6 +52,11 @@
           type: string
           required: false
           default: refs/heads/main
+        cpr-ref:
+          description: The commit, tag or branch of this repository to checkout
+          type: string
+          required: false
+          default: refs/heads/main
         calyptia-tests:
           description: Path to tests to be executed
           type: string
@@ -119,10 +124,11 @@
       # permissions:
       #   contents: read
       uses: ./.github/workflows/get-versions.yaml
+      with:
+        ref: ${{ inputs.cpr-ref }}
 
     run-integration-tests-linux:
       name: Linux e2e tests
-      if: (inputs.k8s-distribution == 'kind' || inputs.k8s-distribution == 'vcluster') && !(contains(inputs.runner, 'mac') || contains(inputs.runner, 'windows'))
       needs:
         - get-versions
       # permissions:
@@ -136,7 +142,7 @@
         matrix:
           # Be aware the KIND and K8S image versions may need to be compatible
           # https://github.com/kubernetes-sigs/kind/releases/tag/v0.20.0
-          k8s-release: ${{ (inputs.k8s-distribution == 'vcluster' && fromJSON(needs.get-versions.outputs.k3s-test-versions)) || fromJSON(needs.get-versions.outputs.k8s-test-versions) }}
+          k8s-release: ${{ fromJSON(needs.get-versions.outputs.k8s-test-versions) }}
       runs-on: ${{ inputs.runner || 'ubuntu-latest' }}
       steps:
         - name: Set up Actuated mirror
@@ -147,6 +153,7 @@
           with:
             repository: chronosphereio/calyptia-core-product-release
             path: core-product-release
+            ref: ${{ inputs.cpr-ref }}
 
         - name: Checkout the e2e test code
           uses: actions/checkout@v4
