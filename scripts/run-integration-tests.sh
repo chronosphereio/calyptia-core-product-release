@@ -90,7 +90,7 @@ function validateInputs() {
 
 function installDependencies() {
     sudo apt-get update
-    sudo apt-get install -y netcat lsof parallel httpie jq time bc python3 python-is-python3 coreutils apt-transport-https ca-certificates gnupg curl sudo 
+    sudo apt-get install -y netcat lsof parallel httpie jq time bc python3 python-is-python3 coreutils apt-transport-https ca-certificates gnupg curl sudo
 
     if command -v bats &> /dev/null; then
         echo "Detected existing installation of BATS so not installing"
@@ -277,7 +277,11 @@ function calyptiaCliInstall() {
         if [[ -n "$CALYPTIA_CLI_IMAGE" ]]; then
             echo "Installing custom Calyptia CLI version: $CALYPTIA_CLI_IMAGE"
             docker pull "$CALYPTIA_CLI_IMAGE"
-            docker image save "$CALYPTIA_CLI_IMAGE" | tar --extract --wildcards --to-stdout '*/layer.tar' | tar --extract --ignore-zeros --verbose --directory="/tmp" 'calyptia'
+            container_id="$(docker create "${CALYPTIA_CLI_IMAGE}")"
+            docker export "${container_id}" > "/tmp/calyptia-cli.tar"
+            tar -xf "/tmp/calyptia-cli.tar" -C "/tmp" calyptia
+            docker rm "${container_id}"
+            rm "/tmp/calyptia-cli.tar"
             chmod a+x /tmp/calyptia
             sudo mv /tmp/calyptia /usr/local/bin/calyptia
         else
@@ -360,4 +364,3 @@ listImages
 cleanup
 
 exit $exitCode
-
