@@ -6,7 +6,7 @@
     "core_fluent_bit": "24.6.8",
     "core_operator": "2.13.1",
     "configmap_reload": "0.11.1",
-    "core_sidecar_ingest_check": "0.0.7",
+    "core_sidecar_ingest_check": "1.0.0",
     "frontend": "1.28.0",
     "lua_sandbox": "5.0.0",
     "lua_modules": "6.2.0"
