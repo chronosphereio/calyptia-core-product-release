@@ -1,6 +1,17 @@
 #!/bin/bash
 set -eux
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+# This does not work with a symlink to this script
+# SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+# See https://stackoverflow.com/a/246128/24637657
+SOURCE=${BASH_SOURCE[0]}
+while [ -L "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  SCRIPT_DIR=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
+  SOURCE=$(readlink "$SOURCE")
+  # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+  [[ $SOURCE != /* ]] && SOURCE=$SCRIPT_DIR/$SOURCE
+done
+SCRIPT_DIR=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
+REPO_ROOT=${REPO_ROOT:-$SCRIPT_DIR/..}
 
 PRODUCTS=${PRODUCTS:?}
 VERSIONS=${VERSIONS:?}
@@ -52,8 +63,8 @@ for index in "${!products[@]}"; do
 
     # Update the new file
     rm -f "$SCRIPT_DIR/component-config-new.json"
-    jq ".versions.$product = \"$version\"" "$SCRIPT_DIR/../component-config.json" | tee "$SCRIPT_DIR/../component-config-new.json"
-    mv -f "$SCRIPT_DIR/../component-config-new.json" "$SCRIPT_DIR/../component-config.json"
+    jq ".versions.$product = \"$version\"" "$REPO_ROOT/component-config.json" | tee "$REPO_ROOT/component-config-new.json"
+    mv -f "$SCRIPT_DIR/../component-config-new.json" "$REPO_ROOT/component-config.json"
 done
 
 cat "$SCRIPT_DIR/../component-config.json"

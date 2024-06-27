@@ -21,15 +21,5 @@
     "configmap_reload": "ghcr.io/calyptia/configmap-reload",
     "core_sidecar_ingest_check": "ghcr.io/calyptia/core/ingest-check",
     "lua_sandbox": "ghcr.io/calyptia/cloud-lua-sandbox"
-  },
-  "k8s_kind_versions": [
-    "v1.27.3",
-    "v1.25.11",
-    "v1.23.17"
-  ],
-  "k8s_k3s_versions": [
-    "v1.27.7-k3s2",
-    "v1.25.15-k3s2",
-    "v1.23.17-k3s1"
-  ]
+  }
 }
