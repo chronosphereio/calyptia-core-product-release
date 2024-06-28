@@ -9,7 +9,7 @@
     "core_sidecar_ingest_check": "1.0.0",
     "frontend": "1.30.0",
     "lua_sandbox": "5.0.0",
-    "lua_modules": "6.2.0"
+    "lua_modules": "6.2.1"
   },
   "containers": {
     "cloud": "ghcr.io/chronosphereio/calyptia-cloud",
