@@ -25,10 +25,6 @@ on:
                 value: ${{ jobs.get-version.outputs.frontend-version }}
             lua-sandbox-version:
                 value: ${{ jobs.get-version.outputs.lua-sandbox-version }}
-            k8s-test-versions:
-                value: ${{ jobs.get-version.outputs.k8s-test-versions }}
-            k3s-test-versions:
-                value: ${{ jobs.get-version.outputs.k3s-test-versions }}
             lua-modules-version:
                 value: ${{ jobs.get-version.outputs.lua-modules-version }}
             ingest-checks-version:
@@ -68,8 +64,6 @@ jobs:
             frontend-version: ${{ steps.frontend-version.outputs.version }}
             lua-sandbox-version: ${{ steps.lua-sandbox-version.outputs.version }}
             lua-modules-version: ${{ steps.lua-modules-version.outputs.version }}
-            k8s-test-versions: ${{ steps.k8s-test-versions.outputs.version }}
-            k3s-test-versions: ${{ steps.k3s-test-versions.outputs.version }}
             ingest-checks-version: ${{ steps.ingest-checks-version.outputs.version }}
         steps:
             - uses: actions/checkout@v4
@@ -151,20 +145,6 @@ jobs:
               continue-on-error: true
               run: |
                 VERSION=$(jq -cr .versions.lua_modules component-config.json)
-                echo "$VERSION"
-                echo "version=$VERSION" >> $GITHUB_OUTPUT
-              shell: bash
-
-            - id: k8s-test-versions
-              run: |
-                VERSION=$(jq -cr .k8s_kind_versions component-config.json)
-                echo "$VERSION"
-                echo "version=$VERSION" >> $GITHUB_OUTPUT
-              shell: bash
-
-            - id: k3s-test-versions
-              run: |
-                VERSION=$(jq -cr .k8s_k3s_versions component-config.json)
                 echo "$VERSION"
                 echo "version=$VERSION" >> $GITHUB_OUTPUT
               shell: bash

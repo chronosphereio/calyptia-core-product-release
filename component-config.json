@@ -3,7 +3,7 @@
     "cli": "1.20.3",
     "cloud": "1.13.2",
     "cloud_e2e": "1.13.2",
-    "core_fluent_bit": "v24.6.11",
+    "core_fluent_bit": "24.6.11",
     "core_operator": "2.14.0",
     "configmap_reload": "0.11.1",
     "core_sidecar_ingest_check": "1.0.0",
@@ -21,15 +21,5 @@
     "configmap_reload": "ghcr.io/calyptia/configmap-reload",
     "core_sidecar_ingest_check": "ghcr.io/calyptia/core/ingest-check",
     "lua_sandbox": "ghcr.io/calyptia/cloud-lua-sandbox"
-  },
-  "k8s_kind_versions": [
-    "v1.27.3",
-    "v1.25.11",
-    "v1.23.17"
-  ],
-  "k8s_k3s_versions": [
-    "v1.27.7-k3s2",
-    "v1.25.15-k3s2",
-    "v1.23.17-k3s1"
-  ]
+  }
 }
