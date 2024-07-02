@@ -47,7 +47,7 @@ jobs:
                 PRODUCT: ${{ inputs.product }}
 
             - name: Update versions
-              run: ./scripts/update-versions.sh
+              run: /bin/bash ./scripts/update-versions.sh
               shell: bash
               env:
                 PRODUCTS: ${{ inputs.product }}
