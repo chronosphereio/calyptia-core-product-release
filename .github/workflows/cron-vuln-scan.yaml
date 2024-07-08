@@ -13,6 +13,8 @@ concurrency:
 jobs:
     ci-get-metadata:
         uses: ./.github/workflows/get-versions.yaml
+        with:
+          ref: ${{ github.ref }}
 
     ci-generate-alerts:
         name: Trigger alerts for failing CVEs
