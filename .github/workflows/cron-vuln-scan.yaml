@@ -47,7 +47,7 @@ jobs:
                 password: ${{ secrets.CI_PAT }}
 
             - name: Scan image, table output for debug
-              uses: anchore/scan-action@v3
+              uses: anchore/scan-action@v4
               with:
                 image: ${{ matrix.container }}
                 by-cve: true
@@ -56,7 +56,7 @@ jobs:
 
             - name: Scan image
               id: scan
-              uses: anchore/scan-action@v3
+              uses: anchore/scan-action@v4
               with:
                 image: ${{ matrix.container }}
                 fail-build: true
