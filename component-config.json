@@ -1,10 +1,10 @@
 {
   "versions": {
-    "cli": "3.2.0",
-    "cloud": "3.2.0",
-    "cloud_e2e": "3.2.0",
+    "cli": "3.2.1",
+    "cloud": "3.2.1",
+    "cloud_e2e": "3.2.1",
     "core_fluent_bit": "24.7.4",
-    "core_operator": "3.2.0",
+    "core_operator": "3.2.1",
     "configmap_reload": "0.11.1",
     "core_sidecar_ingest_check": "1.0.0",
     "frontend": "1.32.0",
